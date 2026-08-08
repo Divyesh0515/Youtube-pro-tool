@@ -7,145 +7,192 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 :root{
---bg:#07090f;--bg2:#0d1117;--bg3:#13192a;--bg4:#1a2235;--bg5:#212b42;
+--bg:#07090f;--bg2:#0d1117;--bg3:#13192a;--bg4:#1a2235;
 --acc:#7c6dfa;--acc2:#a89bff;--accbg:rgba(124,109,250,.1);--accbdr:rgba(124,109,250,.3);
 --grn:#10d97e;--grnbg:rgba(16,217,126,.1);--grnbdr:rgba(16,217,126,.3);
 --yel:#f5a623;--yelbg:rgba(245,166,35,.1);--yelbdr:rgba(245,166,35,.3);
 --red:#ff4d6a;--redbg:rgba(255,77,106,.1);--redbdr:rgba(255,77,106,.3);
 --blu:#3d9eff;--blubg:rgba(61,158,255,.1);--bludbr:rgba(61,158,255,.3);
---pnk:#ff6eb4;--pnkbg:rgba(255,110,180,.1);--pnkbdr:rgba(255,110,180,.3);
 --t1:#eef0f8;--t2:#8892b0;--t3:#4a5568;
 --bdr:rgba(255,255,255,.07);--bdr2:rgba(255,255,255,.12);--bdr3:rgba(255,255,255,.18);
 --r:8px;--r2:12px;--r3:16px;
 }
 body{background:var(--bg);color:var(--t1);min-height:100vh}
 /* TOPBAR */
-.topbar{background:var(--bg2);border-bottom:1px solid var(--bdr);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:0;z-index:200}
-.logo{display:flex;align-items:center;gap:10px}
-.logo-ico{width:34px;height:34px;background:linear-gradient(135deg,#ff0000,#cc0000);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 18px rgba(255,0,0,.4)}
-.logo-name{font-size:16px;font-weight:700;letter-spacing:-.3px}
-.logo-tag{font-size:10px;font-weight:700;color:var(--acc2);background:var(--accbg);border:1px solid var(--accbdr);padding:2px 8px;border-radius:20px;margin-left:6px;text-transform:uppercase;letter-spacing:.5px}
-.nav{display:flex;gap:2px}
-.ntab{background:transparent;border:none;color:var(--t2);padding:7px 16px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;position:relative;display:flex;align-items:center;gap:6px}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--bdr);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:200;overflow-x:auto}
+.logo{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.logo-ico{width:30px;height:30px;background:linear-gradient(135deg,#ff0000,#cc0000);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.logo-name{font-size:15px;font-weight:700}
+.logo-tag{font-size:9px;font-weight:700;color:var(--acc2);background:var(--accbg);border:1px solid var(--accbdr);padding:2px 7px;border-radius:20px;margin-left:5px;white-space:nowrap}
+.nav{display:flex;gap:2px;overflow-x:auto;padding:0 8px}
+.nav::-webkit-scrollbar{height:0}
+.ntab{background:transparent;border:none;color:var(--t2);padding:6px 12px;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;position:relative;display:flex;align-items:center;gap:5px;transition:all .2s}
 .ntab:hover{color:var(--t1);background:var(--bg3)}
 .ntab.on{color:var(--t1);background:var(--bg3)}
 .ntab.on::after{content:"";position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);width:55%;height:2px;border-radius:2px;background:var(--red)}
-.tr{display:flex;align-items:center;gap:10px}
-.live{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--grn);background:var(--grnbg);border:1px solid var(--grnbdr);padding:4px 11px;border-radius:20px}
+.live{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--grn);background:var(--grnbg);border:1px solid var(--grnbdr);padding:4px 10px;border-radius:20px;flex-shrink:0}
 .dot{width:6px;height:6px;background:var(--grn);border-radius:50%;animation:blink 2s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 /* LAYOUT */
-.main{max-width:1200px;margin:0 auto;padding:24px}
+.main{max-width:1200px;margin:0 auto;padding:20px 16px}
 .pg{display:none}.pg.on{display:block}
+/* WELCOME */
+.welcome{background:linear-gradient(135deg,var(--accbg),var(--redbg));border:1px solid var(--accbdr);border-radius:var(--r3);padding:24px;margin-bottom:20px;text-align:center}
+.welcome h2{font-size:22px;font-weight:700;color:var(--t1);margin-bottom:8px}
+.welcome p{font-size:14px;color:var(--t2);margin-bottom:16px}
+.welcome-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.ws{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r2);padding:14px;text-align:center}
+.ws-num{font-size:24px;font-weight:700;color:var(--acc2);margin-bottom:6px}
+.ws-title{font-size:13px;font-weight:600;color:var(--t1);margin-bottom:4px}
+.ws-sub{font-size:11px;color:var(--t3)}
 /* INPUTS */
-.inp-row{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-.inp{flex:1;padding:12px 16px;background:var(--bg2);border:1px solid var(--bdr2);border-radius:var(--r2);color:var(--t1);font-size:14px;font-family:inherit;outline:none;min-width:200px;transition:border-color .2s}
+.inp-row{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.inp{flex:1;padding:11px 14px;background:var(--bg2);border:1px solid var(--bdr2);border-radius:var(--r2);color:var(--t1);font-size:13px;font-family:inherit;outline:none;min-width:180px;transition:border-color .2s}
 .inp:focus{border-color:var(--accbdr);box-shadow:0 0 0 3px rgba(124,109,250,.1)}
 .inp::placeholder{color:var(--t3)}
-.btn{padding:12px 22px;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap}
-.btn-red{background:var(--red);color:#fff}
-.btn-red:hover{opacity:.85;transform:translateY(-1px)}
-.btn-grn{background:var(--grn);color:#000}
-.btn-grn:hover{opacity:.85;transform:translateY(-1px)}
-.btn-acc{background:var(--acc);color:#fff}
-.btn-acc:hover{opacity:.85;transform:translateY(-1px)}
-.btn-ghost{background:var(--bg3);color:var(--t2);border:1px solid var(--bdr2)}
-.btn-ghost:hover{color:var(--t1);border-color:var(--bdr3)}
+.btn{padding:11px 20px;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap}
+.btn-red{background:var(--red);color:#fff}.btn-red:hover{opacity:.85;transform:translateY(-1px)}
+.btn-grn{background:var(--grn);color:#000}.btn-grn:hover{opacity:.85;transform:translateY(-1px)}
+.btn-acc{background:var(--acc);color:#fff}.btn-acc:hover{opacity:.85;transform:translateY(-1px)}
+.btn-ghost{background:var(--bg3);color:var(--t2);border:1px solid var(--bdr2)}.btn-ghost:hover{color:var(--t1)}
+.fsel{padding:10px 12px;background:var(--bg2);border:1px solid var(--bdr2);border-radius:var(--r2);color:var(--t1);font-size:12px;font-family:inherit;cursor:pointer;outline:none}
 /* SECTION */
-.shdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.stitle{font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;gap:8px}
+.shdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.stitle{font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;gap:7px}
 .stitle::before{content:"";width:3px;height:13px;background:var(--red);border-radius:2px;display:inline-block}
-/* CARDS */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
-.card{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r3);padding:18px;transition:all .2s;position:relative;overflow:hidden}
+/* CARDS GRID */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.card{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r3);padding:16px;transition:all .2s;position:relative;overflow:hidden}
 .card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--red),transparent)}
-.card:hover{border-color:var(--bdr2);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.4)}
-.card-thumb{width:100%;height:150px;object-fit:cover;border-radius:var(--r);margin-bottom:12px;border:1px solid var(--bdr)}
-.card-title{font-size:14px;font-weight:600;color:var(--t1);line-height:1.45;margin-bottom:8px}
-.card-channel{font-size:12px;color:var(--acc2);margin-bottom:10px;display:flex;align-items:center;gap:5px}
-.pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-.pill{font-size:11px;color:var(--t2);background:var(--bg3);border:1px solid var(--bdr);padding:3px 9px;border-radius:10px}
-.score-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.score-badge{font-size:13px;font-weight:700;padding:4px 12px;border-radius:20px}
-.sc-hot{background:var(--redbg);color:var(--red);border:1px solid var(--redbdr)}
-.sc-warm{background:var(--yelbg);color:var(--yel);border:1px solid var(--yelbdr)}
-.sc-good{background:var(--grnbg);color:var(--grn);border:1px solid var(--grnbdr)}
-.card-actions{display:flex;gap:8px;flex-wrap:wrap}
-.btn-sm{padding:7px 14px;border:none;border-radius:var(--r);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
-.bsm-red{background:var(--red);color:#fff}
-.bsm-acc{background:var(--accbg);color:var(--acc2);border:1px solid var(--accbdr)}
-.bsm-grn{background:var(--grnbg);color:var(--grn);border:1px solid var(--grnbdr)}
-/* FILTERS */
-.fbar{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;align-items:center}
-.fsel{padding:8px 12px;background:var(--bg2);border:1px solid var(--bdr2);border-radius:var(--r);color:var(--t1);font-size:12px;font-family:inherit;cursor:pointer;outline:none}
-.fc{background:var(--bg2);border:1px solid var(--bdr2);color:var(--t2);padding:7px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
-.fc.on{background:var(--redbg);border-color:var(--redbdr);color:var(--red);font-weight:700}
+.card:hover{border-color:var(--bdr2);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.4)}
+.card-thumb{width:100%;height:145px;object-fit:cover;border-radius:var(--r);margin-bottom:11px;border:1px solid var(--bdr)}
+.card-title{font-size:13px;font-weight:600;color:var(--t1);line-height:1.45;margin-bottom:7px}
+.card-ch{font-size:11px;color:var(--acc2);margin-bottom:9px}
+.pills{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.pill{font-size:11px;color:var(--t2);background:var(--bg3);border:1px solid var(--bdr);padding:3px 8px;border-radius:10px}
+.pill-grn{background:var(--grnbg);color:var(--grn);border-color:var(--grnbdr)}
+.pill-red{background:var(--redbg);color:var(--red);border-color:var(--redbdr)}
+.pill-yel{background:var(--yelbg);color:var(--yel);border-color:var(--yelbdr)}
+.card-acts{display:flex;gap:7px;flex-wrap:wrap}
+.bsm{padding:7px 13px;border:none;border-radius:var(--r);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:opacity .15s}
+.bsm-red{background:var(--red);color:#fff}.bsm-red:hover{opacity:.85}
+.bsm-acc{background:var(--accbg);color:var(--acc2);border:1px solid var(--accbdr)}.bsm-acc:hover{background:var(--acc);color:#fff}
+.bsm-grn{background:var(--grnbg);color:var(--grn);border:1px solid var(--grnbdr)}.bsm-grn:hover{background:var(--grn);color:#000}
+.bsm-copy{background:var(--bg3);color:var(--t2);border:1px solid var(--bdr2)}.bsm-copy:hover{color:var(--t1)}
 /* LOADING */
 .loading{text-align:center;padding:60px 20px}
-.spin{font-size:36px;display:inline-block;animation:spin 1s linear infinite;margin-bottom:14px}
+.spin{font-size:34px;display:inline-block;animation:spin 1s linear infinite;margin-bottom:12px}
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-.load-t{font-size:16px;font-weight:600;color:var(--acc2);margin-bottom:6px}
-.load-s{font-size:13px;color:var(--t3)}
+.load-t{font-size:15px;font-weight:600;color:var(--acc2);margin-bottom:5px}
+.load-s{font-size:12px;color:var(--t3)}
 /* EMPTY */
 .empty{text-align:center;padding:50px 20px;color:var(--t3)}
-.em-i{font-size:40px;margin-bottom:12px}
-.em-t{font-size:16px;font-weight:600;color:var(--t2);margin-bottom:6px}
-/* DETAIL VIEW */
-.detail{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r3);padding:24px;margin-top:16px}
-.detail-title{font-size:18px;font-weight:700;color:var(--t1);margin-bottom:16px;line-height:1.4}
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:20px}
-.stat-box{background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r2);padding:14px;text-align:center}
-.stat-val{font-size:22px;font-weight:700;color:var(--t1)}
-.stat-lbl{font-size:11px;color:var(--t3);margin-top:3px}
-.stat-tag{font-size:10px;font-weight:600;margin-top:5px}
-.tg{color:var(--grn)}.ty{color:var(--yel)}.tr-c{color:var(--red)}.ta{color:var(--acc2)}
-.section-box{background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r2);padding:16px;margin-bottom:14px}
-.section-box h3{font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.em-i{font-size:38px;margin-bottom:10px}
+.em-t{font-size:15px;font-weight:600;color:var(--t2);margin-bottom:5px}
+.em-s{font-size:12px}
+/* DETAIL */
+.detail{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r3);padding:20px;margin-bottom:16px}
+.detail-t{font-size:17px;font-weight:700;color:var(--t1);margin-bottom:14px;line-height:1.4}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:9px;margin-bottom:16px}
+.sbox{background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r2);padding:12px;text-align:center}
+.sv{font-size:21px;font-weight:700;color:var(--t1)}
+.sl{font-size:10px;color:var(--t3);margin-top:3px}
+.st{font-size:9px;font-weight:600;margin-top:4px}
+.tg{color:var(--grn)}.ty{color:var(--yel)}.ta{color:var(--acc2)}.tr-c{color:var(--red)}
+.sec-box{background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r2);padding:14px;margin-bottom:12px}
+.sec-box h3{font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.ins-box{background:linear-gradient(135deg,var(--grnbg),var(--accbg));border:1px solid var(--grnbdr);border-radius:var(--r2);padding:14px;margin-bottom:12px}
+.ins-box h3{font-size:11px;font-weight:700;color:var(--grn);text-transform:uppercase;letter-spacing:.5px;margin-bottom:9px}
+.ins-item{font-size:13px;color:var(--t1);padding:5px 0;border-bottom:1px solid var(--bdr);display:flex;align-items:flex-start;gap:7px}
+.ins-item:last-child{border-bottom:none}
+/* TAGS */
 .tag-cloud{display:flex;flex-wrap:wrap;gap:6px}
-.tag-item{font-size:11px;background:var(--accbg);color:var(--acc2);border:1px solid var(--accbdr);padding:3px 10px;border-radius:20px;cursor:pointer}
+.tag-item{font-size:11px;background:var(--accbg);color:var(--acc2);border:1px solid var(--accbdr);padding:3px 10px;border-radius:20px;cursor:pointer;transition:all .15s}
 .tag-item:hover{background:var(--acc);color:#fff}
-.insight-box{background:linear-gradient(135deg,var(--grnbg),var(--accbg));border:1px solid var(--grnbdr);border-radius:var(--r2);padding:16px;margin-bottom:14px}
-.insight-box h3{font-size:12px;font-weight:700;color:var(--grn);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
-.insight-item{font-size:13px;color:var(--t1);padding:5px 0;border-bottom:1px solid var(--bdr);display:flex;align-items:flex-start;gap:8px}
-.insight-item:last-child{border-bottom:none}
+/* SCORE */
+.score-badge{font-size:13px;font-weight:700;padding:5px 14px;border-radius:20px;display:inline-block}
+.sb-hot{background:var(--redbg);color:var(--red);border:1px solid var(--redbdr)}
+.sb-warm{background:var(--yelbg);color:var(--yel);border:1px solid var(--yelbdr)}
+.sb-good{background:var(--grnbg);color:var(--grn);border:1px solid var(--grnbdr)}
 /* COMP */
 .comp-badge{font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px}
-.comp-low{background:var(--grnbg);color:var(--grn);border:1px solid var(--grnbdr)}
-.comp-med{background:var(--yelbg);color:var(--yel);border:1px solid var(--yelbdr)}
-.comp-high{background:var(--redbg);color:var(--red);border:1px solid var(--redbdr)}
-/* GAP */
-.gap-result{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r3);padding:20px;margin-bottom:14px}
-.gap-rec{font-size:14px;font-weight:600;color:var(--t1);padding:14px 16px;border-radius:var(--r2);margin-bottom:14px;line-height:1.6}
-.gap-rec-ex{background:var(--grnbg);border:1px solid var(--grnbdr)}
-.gap-rec-gd{background:var(--yelbg);border:1px solid var(--yelbdr)}
-.gap-rec-ok{background:var(--redbg);border:1px solid var(--redbdr)}
-/* REVENUE */
-.rev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
-.rev-card{background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r2);padding:16px;text-align:center}
-.rev-platform{font-size:12px;color:var(--t2);margin-bottom:8px;font-weight:600}
-.rev-amount{font-size:22px;font-weight:700;color:var(--t1)}
-.rev-rpm{font-size:11px;color:var(--t3);margin-top:4px}
+.comp-vl{background:var(--grnbg);color:var(--grn);border:1px solid var(--grnbdr)}
+.comp-l{background:var(--grnbg);color:var(--grn);border:1px solid var(--grnbdr)}
+.comp-m{background:var(--yelbg);color:var(--yel);border:1px solid var(--yelbdr)}
+.comp-h{background:var(--redbg);color:var(--red);border:1px solid var(--redbdr)}
+/* SENTIMENT */
+.sent-bar{height:8px;border-radius:4px;overflow:hidden;display:flex;gap:2px;margin-bottom:8px}
+.sb-pos{background:var(--grn)}.sb-shock{background:var(--yel)}.sb-neg{background:var(--red)}
 /* COMMENT */
-.comment-item{background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r);padding:12px;margin-bottom:8px}
-.comment-text{font-size:13px;color:var(--t1);line-height:1.5;margin-bottom:6px}
-.comment-meta{font-size:11px;color:var(--t3);display:flex;align-items:center;gap:10px}
-.sentiment-bar{height:8px;border-radius:4px;overflow:hidden;display:flex;gap:2px;margin-bottom:8px}
-.sb-pos{background:var(--grn)}
-.sb-shock{background:var(--yel)}
-.sb-neg{background:var(--red)}
+.com-item{background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r);padding:11px;margin-bottom:7px}
+.com-text{font-size:12px;color:var(--t1);line-height:1.5;margin-bottom:5px}
+.com-meta{font-size:10px;color:var(--t3);display:flex;gap:10px}
+/* GAP */
+.gap-rec{font-size:14px;font-weight:600;color:var(--t1);padding:14px 16px;border-radius:var(--r2);margin-bottom:14px;line-height:1.6}
+.gr-ex{background:var(--grnbg);border:1px solid var(--grnbdr)}
+.gr-gd{background:var(--yelbg);border:1px solid var(--yelbdr)}
+.gr-ok{background:var(--redbg);border:1px solid var(--redbdr)}
+/* REVENUE */
+.rev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.rev-card{background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r2);padding:14px;text-align:center}
+.rev-plat{font-size:11px;color:var(--t2);margin-bottom:7px;font-weight:600}
+.rev-amt{font-size:20px;font-weight:700;color:var(--t1)}
+.rev-rpm{font-size:10px;color:var(--t3);margin-top:3px}
+/* HIDDEN GEMS */
+.gem-card{background:var(--bg2);border:1px solid var(--grnbdr);border-radius:var(--r3);padding:18px;margin-bottom:14px;position:relative;overflow:hidden}
+.gem-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--grn),var(--acc),transparent)}
+.gem-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.gem-avatar{width:50px;height:50px;border-radius:50%;border:2px solid var(--grnbdr);object-fit:cover}
+.gem-avatar-placeholder{width:50px;height:50px;border-radius:50%;background:var(--grnbg);border:2px solid var(--grnbdr);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.gem-ch-name{font-size:16px;font-weight:700;color:var(--t1);margin-bottom:3px}
+.gem-ch-meta{font-size:12px;color:var(--t3)}
+.gem-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--grnbg);color:var(--grn);border:1px solid var(--grnbdr);margin-left:auto;flex-shrink:0}
+.gem-videos{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:14px}
+.gem-video{background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r);padding:10px}
+.gem-v-title{font-size:11px;color:var(--t1);margin-bottom:6px;line-height:1.4;font-weight:500}
+.gem-v-views{font-size:13px;font-weight:700;color:var(--grn)}
+.gem-v-days{font-size:10px;color:var(--t3);margin-top:2px}
+.gem-insight{background:linear-gradient(135deg,rgba(16,217,126,.08),rgba(124,109,250,.08));border:1px solid var(--grnbdr);border-radius:var(--r2);padding:12px;margin-bottom:12px}
+.gem-insight h4{font-size:11px;font-weight:700;color:var(--grn);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px}
+.gem-acts{display:flex;gap:8px;flex-wrap:wrap}
+.lang-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:18px}
+.lang-btn{background:var(--bg2);border:1px solid var(--bdr2);border-radius:var(--r2);padding:12px;text-align:center;cursor:pointer;transition:all .2s;font-family:inherit}
+.lang-btn:hover{border-color:var(--grnbdr);background:var(--grnbg)}
+.lang-btn.sel{border-color:var(--grn);background:var(--grnbg)}
+.lang-flag{font-size:24px;display:block;margin-bottom:5px}
+.lang-name{font-size:12px;font-weight:600;color:var(--t1)}
+.lang-rpm{font-size:10px;color:var(--t3);margin-top:2px}
+/* AI BOX */
+.ai-box{background:linear-gradient(135deg,var(--accbg),rgba(168,155,255,.05));border:1px solid var(--accbdr);border-radius:var(--r2);padding:14px;margin-bottom:12px}
+.ai-box h3{font-size:11px;font-weight:700;color:var(--acc2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.ai-item{font-size:13px;color:var(--t1);padding:5px 0;border-bottom:1px solid var(--bdr);display:flex;align-items:flex-start;gap:8px}
+.ai-item:last-child{border-bottom:none}
+.ai-label{font-size:10px;font-weight:700;color:var(--acc2);text-transform:uppercase;min-width:80px;flex-shrink:0;margin-top:2px}
 /* SETTINGS */
-.scard{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r2);padding:20px;margin-bottom:14px}
-.scard-t{font-size:15px;font-weight:700;color:var(--t1);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.scard{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r2);padding:18px;margin-bottom:12px}
+.scard-t{font-size:14px;font-weight:700;color:var(--t1);margin-bottom:14px;display:flex;align-items:center;gap:7px}
 .slbl{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
-.sg{margin-bottom:14px}
-.sinp{width:100%;padding:10px 13px;background:var(--bg3);border:1px solid var(--bdr2);border-radius:var(--r);color:var(--t1);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s}
+.sg{margin-bottom:12px}
+.sinp{width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--bdr2);border-radius:var(--r);color:var(--t1);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s}
 .sinp:focus{border-color:var(--accbdr)}
-.key-status{font-size:12px;padding:8px 12px;border-radius:var(--r);margin-top:8px;font-weight:600}
-.ks-ok{background:var(--grnbg);color:var(--grn);border:1px solid var(--grnbdr)}
-.ks-no{background:var(--redbg);color:var(--red);border:1px solid var(--redbdr)}
+.ks-ok{background:var(--grnbg);color:var(--grn);border:1px solid var(--grnbdr);padding:8px 12px;border-radius:var(--r);font-size:12px;font-weight:600;margin-top:8px}
+.ks-no{background:var(--redbg);color:var(--red);border:1px solid var(--redbdr);padding:8px 12px;border-radius:var(--r);font-size:12px;font-weight:600;margin-top:8px}
+/* FILTERS BAR */
+.fbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.fc{background:var(--bg2);border:1px solid var(--bdr2);color:var(--t2);padding:6px 13px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
+.fc.on{background:var(--redbg);border-color:var(--redbdr);color:var(--red);font-weight:700}
+/* COPY TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--grn);color:#000;padding:10px 18px;border-radius:var(--r);font-size:13px;font-weight:700;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+@media(max-width:600px){
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .rev-grid{grid-template-columns:repeat(2,1fr)}
+  .welcome-steps{grid-template-columns:1fr}
+  .gem-videos{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -155,18 +202,17 @@ body{background:var(--bg);color:var(--t1);min-height:100vh}
     <div><span class="logo-name">YouTube Pro</span><span class="logo-tag">Intelligence Tool</span></div>
   </div>
   <div class="nav">
-    <button class="ntab on" onclick="ST('tr')">🔥 Trending USA</button>
-    <button class="ntab" onclick="ST('ni')">🔍 Niche Spy</button>
-    <button class="ntab" onclick="ST('ch')">🕵️ Channel Spy</button>
-    <button class="ntab" onclick="ST('vi')">📊 Video Analyzer</button>
-    <button class="ntab" onclick="ST('gp')">💡 Content Gaps</button>
-    <button class="ntab" onclick="ST('cm')">💬 Comment Intel</button>
-    <button class="ntab" onclick="ST('rv')">💰 Revenue Calc</button>
-    <button class="ntab" onclick="ST('st')">⚙️ Settings</button>
+    <button class="ntab on" onclick="ST('tr',this)">🔥 Trending</button>
+    <button class="ntab" onclick="ST('ni',this)">🔍 Niche Spy</button>
+    <button class="ntab" onclick="ST('ch',this)">🕵️ Channel Spy</button>
+    <button class="ntab" onclick="ST('vi',this)">📊 Video Analyzer</button>
+    <button class="ntab" onclick="ST('gp',this)">💡 Content Gaps</button>
+    <button class="ntab" onclick="ST('cm',this)">💬 Comment Intel</button>
+    <button class="ntab" onclick="ST('hg',this)">🌍 Hidden Gems</button>
+    <button class="ntab" onclick="ST('rv',this)">💰 Revenue</button>
+    <button class="ntab" onclick="ST('st',this)">⚙️ Settings</button>
   </div>
-  <div class="tr">
-    <div class="live"><span class="dot"></span>Live API</div>
-  </div>
+  <div class="live"><span class="dot"></span>Live API</div>
 </div>
 
 <div class="main">
@@ -174,18 +220,12 @@ body{background:var(--bg);color:var(--t1);min-height:100vh}
 <!-- TRENDING -->
 <div class="pg on" id="tab-tr">
   <div class="shdr">
-    <div class="stitle">🔥 USA Trending Right Now</div>
-    <div class="live"><span class="dot"></span>Real YouTube Data</div>
+    <div class="stitle">🔥 USA Trending Right Now — 5 min+ only</div>
+    <div class="live"><span class="dot"></span>Real data</div>
   </div>
   <div class="fbar">
     <select class="fsel" id="tr-cat" onchange="loadTrending()">
       <option value="">All Categories</option>
-      <option value="1">Film & Animation</option>
-      <option value="2">Autos & Vehicles</option>
-      <option value="10">Music</option>
-      <option value="15">Pets & Animals</option>
-      <option value="17">Sports</option>
-      <option value="20">Gaming</option>
       <option value="22">People & Blogs</option>
       <option value="23">Comedy</option>
       <option value="24">Entertainment</option>
@@ -193,47 +233,44 @@ body{background:var(--bg);color:var(--t1);min-height:100vh}
       <option value="26">Howto & Style</option>
       <option value="27">Education</option>
       <option value="28">Science & Tech</option>
-      <option value="29">Nonprofits & Activism</option>
+      <option value="10">Music</option>
+      <option value="17">Sports</option>
+      <option value="20">Gaming</option>
     </select>
     <button class="btn btn-red" onclick="loadTrending()">🔄 Refresh</button>
   </div>
-  <div id="tr-results"><div class="empty"><div class="em-i">🔥</div><div class="em-t">Loading USA trending videos...</div></div></div>
+  <div id="tr-res"></div>
 </div>
 
 <!-- NICHE SPY -->
 <div class="pg" id="tab-ni">
   <div class="shdr"><div class="stitle">🔍 Niche Spy — Find Competition</div></div>
   <div class="inp-row">
-    <input class="inp" id="ni-q" placeholder="Enter niche — e.g. lawn care, cake ASMR, dark psychology..." onkeypress="if(event.key==='Enter')loadNiche()">
-    <select class="fsel" id="ni-days">
-      <option value="15">Last 15 days</option>
-      <option value="30" selected>Last 30 days</option>
-      <option value="60">Last 60 days</option>
-      <option value="90">Last 90 days</option>
-    </select>
-    <button class="btn btn-red" onclick="loadNiche()">🔍 Analyze Niche</button>
+    <input class="inp" id="ni-q" placeholder="Enter niche — e.g. lawn care, dark psychology, cake ASMR..." onkeypress="if(event.key==='Enter')loadNiche()">
+    <select class="fsel" id="ni-days"><option value="15">Last 15 days</option><option value="30" selected>Last 30 days</option><option value="60">Last 60 days</option><option value="90">Last 90 days</option></select>
+    <button class="btn btn-red" onclick="loadNiche()">🔍 Analyze</button>
   </div>
-  <div id="ni-results"><div class="empty"><div class="em-i">🔍</div><div class="em-t">Enter a niche to analyze</div><div class="em-s">See competition, avg views, top channels</div></div></div>
+  <div id="ni-res"><div class="empty"><div class="em-i">🔍</div><div class="em-t">Enter a niche to analyze</div><div class="em-s">See competition level, avg views, top channels</div></div></div>
 </div>
 
 <!-- CHANNEL SPY -->
 <div class="pg" id="tab-ch">
   <div class="shdr"><div class="stitle">🕵️ Channel Spy — Deep Analysis</div></div>
   <div class="inp-row">
-    <input class="inp" id="ch-inp" placeholder="Channel @username or URL — e.g. @MrBeast or channel ID..." onkeypress="if(event.key==='Enter')loadChannel()">
-    <button class="btn btn-red" onclick="loadChannel()">🕵️ Spy Channel</button>
+    <input class="inp" id="ch-inp" placeholder="@username or channel URL — e.g. @MrBeast" onkeypress="if(event.key==='Enter')loadChannel()">
+    <button class="btn btn-red" onclick="loadChannel()">🕵️ Spy</button>
   </div>
-  <div id="ch-results"><div class="empty"><div class="em-i">🕵️</div><div class="em-t">Enter any YouTube channel</div><div class="em-s">Get full stats, top videos, weaknesses</div></div></div>
+  <div id="ch-res"><div class="empty"><div class="em-i">🕵️</div><div class="em-t">Enter any YouTube channel</div><div class="em-s">Get full stats, top videos, upload pattern, keywords</div></div></div>
 </div>
 
 <!-- VIDEO ANALYZER -->
 <div class="pg" id="tab-vi">
   <div class="shdr"><div class="stitle">📊 Video Analyzer — Deep Dive</div></div>
   <div class="inp-row">
-    <input class="inp" id="vi-inp" placeholder="Paste YouTube video URL — youtube.com/watch?v=..." onkeypress="if(event.key==='Enter')loadVideo()">
-    <button class="btn btn-red" onclick="loadVideo()">📊 Analyze Video</button>
+    <input class="inp" id="vi-inp" placeholder="Paste YouTube URL — youtube.com/watch?v=... or youtu.be/..." onkeypress="if(event.key==='Enter')loadVideo()">
+    <button class="btn btn-red" onclick="loadVideo()">📊 Analyze</button>
   </div>
-  <div id="vi-results"><div class="empty"><div class="em-i">📊</div><div class="em-t">Paste any YouTube video URL</div><div class="em-s">Get viral score, tags, blueprint to make better version</div></div></div>
+  <div id="vi-res"><div class="empty"><div class="em-i">📊</div><div class="em-t">Paste any YouTube video URL</div><div class="em-s">Get viral score, tags to steal, blueprint to make better version</div></div></div>
 </div>
 
 <!-- CONTENT GAPS -->
@@ -243,7 +280,7 @@ body{background:var(--bg);color:var(--t1);min-height:100vh}
     <input class="inp" id="gp-q" placeholder="Search topic — e.g. how to fix dead lawn, ferrofluid art..." onkeypress="if(event.key==='Enter')loadGaps()">
     <button class="btn btn-grn" onclick="loadGaps()">💡 Find Gap</button>
   </div>
-  <div id="gp-results"><div class="empty"><div class="em-i">💡</div><div class="em-t">Find gaps in any topic</div><div class="em-s">Discover low competition + high demand videos to make</div></div></div>
+  <div id="gp-res"><div class="empty"><div class="em-i">💡</div><div class="em-t">Find low competition topics</div><div class="em-s">Discover what to make with proven demand and zero competition</div></div></div>
 </div>
 
 <!-- COMMENT INTEL -->
@@ -251,22 +288,44 @@ body{background:var(--bg);color:var(--t1);min-height:100vh}
   <div class="shdr"><div class="stitle">💬 Comment Intelligence</div></div>
   <div class="inp-row">
     <input class="inp" id="cm-inp" placeholder="Paste YouTube video URL to analyze comments..." onkeypress="if(event.key==='Enter')loadComments()">
-    <button class="btn btn-acc" onclick="loadComments()">💬 Analyze Comments</button>
+    <button class="btn btn-acc" onclick="loadComments()">💬 Analyze</button>
   </div>
-  <div id="cm-results"><div class="empty"><div class="em-i">💬</div><div class="em-t">Analyze any video comments</div><div class="em-s">Sentiment, demand score, what audience wants more of</div></div></div>
+  <div id="cm-res"><div class="empty"><div class="em-i">💬</div><div class="em-t">Analyze any video comments</div><div class="em-s">Sentiment, demand score, comment language breakdown</div></div></div>
 </div>
 
-<!-- REVENUE CALC -->
+<!-- HIDDEN GEMS -->
+<div class="pg" id="tab-hg">
+  <div class="shdr"><div class="stitle">🌍 Hidden Gems — Find Underrated Foreign Channels</div></div>
+  <div style="background:var(--bg2);border:1px solid var(--grnbdr);border-radius:var(--r2);padding:14px;margin-bottom:18px;font-size:13px;color:var(--t2);line-height:1.6">
+    💡 <strong style="color:var(--grn)">How it works:</strong> Finds small foreign channels (under 20K subs) whose last 3-6 videos got 50K+ views each. This means the niche is proven but not yet competitive in English. Make the same content in English = easy viral!
+  </div>
+  <div style="margin-bottom:16px">
+    <div class="slbl" style="margin-bottom:10px">Select Language</div>
+    <div class="lang-grid" id="lang-grid"></div>
+  </div>
+  <div class="inp-row" style="align-items:center">
+    <div style="flex:1;display:flex;gap:10px;flex-wrap:wrap">
+      <div>
+        <div class="slbl">Max Subscribers</div>
+        <select class="fsel" id="hg-subs"><option value="10000">Under 10K</option><option value="20000" selected>Under 20K</option><option value="50000">Under 50K</option></select>
+      </div>
+      <div>
+        <div class="slbl">Min Views (last videos)</div>
+        <select class="fsel" id="hg-views"><option value="20000">20K+</option><option value="50000" selected>50K+</option><option value="100000">100K+</option></select>
+      </div>
+    </div>
+    <button class="btn btn-grn" style="align-self:flex-end" onclick="loadHiddenGems()">🌍 Find Hidden Gems</button>
+  </div>
+  <div id="hg-res"><div class="empty"><div class="em-i">🌍</div><div class="em-t">Select a language and click Find</div><div class="em-s">Tool will scan for small channels with unexpectedly high views</div></div></div>
+</div>
+
+<!-- REVENUE -->
 <div class="pg" id="tab-rv">
   <div class="shdr"><div class="stitle">💰 Revenue Calculator</div></div>
   <div class="detail" style="margin-top:0">
-    <div class="sg">
-      <div class="slbl">Expected Views Per Video</div>
-      <input class="sinp" type="number" id="rv-views" value="100000" oninput="calcRev()">
-    </div>
-    <div class="sg">
-      <div class="slbl">Niche / Category</div>
-      <select class="sinp" id="rv-niche" onchange="calcRev()">
+    <div class="sg"><div class="slbl">Expected Views Per Video</div><input class="sinp" type="number" id="rv-v" value="100000" oninput="calcRev()"></div>
+    <div class="sg"><div class="slbl">Niche / Category</div>
+      <select class="sinp" id="rv-n" onchange="calcRev()">
         <option value="8">General / Entertainment ($8 RPM)</option>
         <option value="10">Food & Cooking ($10 RPM)</option>
         <option value="12">Health & Fitness ($12 RPM)</option>
@@ -275,125 +334,120 @@ body{background:var(--bg);color:var(--t1);min-height:100vh}
         <option value="22">Finance & Money ($22 RPM)</option>
         <option value="25">Business ($25 RPM)</option>
         <option value="6">Gaming ($6 RPM)</option>
-        <option value="5">Music ($5 RPM)</option>
       </select>
     </div>
-    <div class="sg">
-      <div class="slbl">Videos Per Week</div>
-      <input class="sinp" type="number" id="rv-freq" value="5" oninput="calcRev()">
-    </div>
-    <div id="rv-result"></div>
+    <div class="sg"><div class="slbl">Videos Per Week</div><input class="sinp" type="number" id="rv-f" value="5" oninput="calcRev()"></div>
+    <div class="sg"><div class="slbl">Number of Channels</div><input class="sinp" type="number" id="rv-ch" value="1" oninput="calcRev()"></div>
+    <div id="rv-res"></div>
   </div>
 </div>
 
 <!-- SETTINGS -->
 <div class="pg" id="tab-st">
   <div class="scard">
-    <div class="scard-t">🔑 YouTube API Key</div>
-    <div class="sg">
-      <div class="slbl">YouTube Data API v3 Key</div>
-      <input class="sinp" type="password" id="yt-key" placeholder="AIza...">
-      <div id="key-status"></div>
-    </div>
-    <button class="btn btn-acc" onclick="saveKey()" style="width:100%;padding:11px">Save Key</button>
-    <div style="font-size:11px;color:var(--t3);text-align:center;margin-top:10px">🔒 Key saved in your browser only</div>
+    <div class="scard-t">🔑 API Keys</div>
+    <div class="sg"><div class="slbl">YouTube Data API v3 Key</div><input class="sinp" type="password" id="yt-key" placeholder="AIza..."><div id="yt-status"></div></div>
+    <div class="sg"><div class="slbl">Claude API Key (for AI features)</div><input class="sinp" type="password" id="cl-key" placeholder="sk-ant-..."><div id="cl-status"></div></div>
+    <button class="btn btn-acc" onclick="saveKeys()" style="width:100%;padding:11px;margin-top:4px">Save Keys</button>
+    <div style="font-size:11px;color:var(--t3);text-align:center;margin-top:8px">🔒 Keys saved in your browser only — never sent to any server</div>
   </div>
   <div class="scard">
-    <div class="scard-t">ℹ️ How to Get API Key</div>
-    <div style="font-size:13px;color:var(--t2);line-height:1.8">
+    <div class="scard-t">ℹ️ How to Get YouTube API Key</div>
+    <div style="font-size:13px;color:var(--t2);line-height:1.9">
       1. Go to <a href="https://console.cloud.google.com" target="_blank" style="color:var(--acc2)">console.cloud.google.com</a><br>
-      2. Create new project<br>
-      3. Enable "YouTube Data API v3"<br>
-      4. Go to Credentials → Create API Key<br>
-      5. Copy and paste above<br><br>
-      <strong style="color:var(--grn)">Free quota: 10,000 units/day</strong>
+      2. Create new project → Enable "YouTube Data API v3"<br>
+      3. Credentials → Create API Key → Copy<br>
+      4. Paste above and Save<br><br>
+      <strong style="color:var(--grn)">Free quota: 10,000 units/day (~100 searches)</strong>
     </div>
+  </div>
+  <div class="scard">
+    <div class="scard-t">📊 Your Channel Tracker</div>
+    <div style="font-size:13px;color:var(--t3)">Track your 20 channels progress here</div>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <input class="sinp" id="track-ch" placeholder="Add channel @username" style="flex:1">
+      <button class="btn btn-acc" onclick="addTracked()">Add</button>
+    </div>
+    <div id="tracked-list" style="margin-top:12px"></div>
   </div>
 </div>
 
 </div>
 
+<div class="toast" id="toast">✅ Copied!</div>
+
 <script>
+// ── STATE ──────────────────────────────────────────
+let selLang = 'de';
+let trackedChannels = JSON.parse(localStorage.getItem('yt_tracked')||'[]');
+
 // ── HELPERS ──────────────────────────────────────────
-function getKey(){return localStorage.getItem('yt_pro_key')||'';}
-function fmtV(n){if(n>=1000000)return(n/1000000).toFixed(1)+'M';if(n>=1000)return(n/1000).toFixed(1)+'K';return n.toString();}
-function parseDur(d){const m=d.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/)||[];return(parseInt(m[1]||0)*60)+parseInt(m[2]||0);}
-function dAgo(ds){const d=Math.floor((new Date()-new Date(ds))/86400000);return d===0?'Today':d===1?'Yesterday':d+' days ago';}
-function extractID(url){const m=url.match(/(?:v=|youtu\.be\/|shorts\/)([^&\n?#]+)/);return m?m[1]:url.trim();}
-function extractChannel(inp){
+const GK = () => localStorage.getItem('yt_pro_key')||'';
+const CK = () => localStorage.getItem('yt_cl_key')||'';
+const fmtV = n => n>=1000000?(n/1000000).toFixed(1)+'M':n>=1000?(n/1000).toFixed(1)+'K':n.toString();
+const dAgo = ds => { const d=Math.floor((new Date()-new Date(ds))/86400000); return d===0?'Today':d===1?'Yesterday':d+' days ago'; };
+const extractID = url => { const m=url.match(/(?:v=|youtu\.be\/|shorts\/)([^&\n?#]+)/); return m?m[1]:url.trim(); };
+const extractCh = inp => {
   if(inp.includes('youtube.com/channel/'))return{type:'id',val:inp.split('channel/')[1].split('/')[0]};
-  if(inp.includes('@'))return{type:'username',val:inp.includes('youtube.com')? inp.split('@')[1].split('/')[0] : inp.replace('@','')};
+  if(inp.includes('@')||!inp.includes('http'))return{type:'username',val:inp.replace(/.*@/,'').split('/')[0]};
   return{type:'id',val:inp.trim()};
-}
-function scoreClass(s){return s>=85?'sc-hot':s>=65?'sc-warm':'sc-good';}
-function compClass(c){return c==='LOW'||c==='VERY LOW'?'comp-low':c==='MEDIUM'?'comp-med':'comp-high';}
+};
+const scClass = s => s>=85?'sb-hot':s>=65?'sb-warm':'sb-good';
+const cmpClass = c => c==='VERY LOW'||c==='LOW'?'comp-l':c==='MEDIUM'?'comp-m':'comp-h';
 
 function loading(id,msg='Loading...'){
   document.getElementById(id).innerHTML=`<div class="loading"><div class="spin">⏳</div><div class="load-t">${msg}</div><div class="load-s">Fetching real YouTube data...</div></div>`;
 }
 
+function copyText(text,btn){
+  navigator.clipboard.writeText(text).then(()=>{
+    const t=document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),2000);
+    if(btn){const orig=btn.textContent;btn.textContent='✅ Copied!';setTimeout(()=>btn.textContent=orig,2000);}
+  });
+}
+
+function noKey(id){
+  document.getElementById(id).innerHTML=`<div class="empty"><div class="em-i">🔑</div><div class="em-t">API Key needed</div><div class="em-s">Go to ⚙️ Settings tab → Add your YouTube API key</div></div>`;
+}
+
 // ── TAB SWITCH ──────────────────────────────────────
-function ST(tab){
+function ST(tab,el){
   document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('on'));
   document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
-  event.currentTarget.classList.add('on');
+  el.classList.add('on');
   document.getElementById('tab-'+tab).classList.add('on');
   if(tab==='tr')loadTrending();
   if(tab==='rv')calcRev();
-  if(tab==='st')checkKey();
+  if(tab==='st'){checkKeys();renderTracked();}
 }
 
-// ── TRENDING ──────────────────────────────────────
-async function loadTrending(){
-  const key=getKey();
-  if(!key){document.getElementById('tr-results').innerHTML=`<div class="empty"><div class="em-i">🔑</div><div class="em-t">API Key needed</div><div class="em-s">Go to Settings tab and add your YouTube API key</div></div>`;return;}
-  loading('tr-results','Loading USA trending videos...');
-  const cat=document.getElementById('tr-cat').value;
-  try{
-    const r=await fetch(`/api/trending?category=${cat}&key=${key}`);
-    const d=await r.json();
-    if(d.error)throw new Error(d.error);
-    renderVideos('tr-results',d.videos,'trending');
-  }catch(e){
-    document.getElementById('tr-results').innerHTML=`<div class="empty"><div class="em-i">❌</div><div class="em-t">Error</div><div class="em-s">${e.message}</div></div>`;
-  }
-}
-
-function renderVideos(id,videos,mode){
+// ── RENDER VIDEOS GRID ──────────────────────────────────────
+function renderGrid(id, videos, onAnalyze){
   const c=document.getElementById(id);
-  if(!videos?.length){c.innerHTML=`<div class="empty"><div class="em-i">😔</div><div class="em-t">No videos found</div></div>`;return;}
-  
-  c.innerHTML=`<div class="grid" id="${id}-grid"></div>`;
-  const g=document.getElementById(`${id}-grid`);
-  
-  videos.forEach((v,i)=>{
-    const views=v.views||0;
-    const likes=v.likes||0;
-    const dur=v.duration?parseDur(v.duration):v.duration||0;
-    const lr=views>0?((likes/views)*100).toFixed(1):0;
-    const score=v.score||calcScore(views,likes,dur,v.daysAgo||0);
-    const sc=scoreClass(score);
-    
-    const el=document.createElement('div');
-    el.className='card';
+  if(!videos?.length){c.innerHTML=`<div class="empty"><div class="em-i">😔</div><div class="em-t">No videos found (5 min+ only)</div><div class="em-s">Try different filters or niche</div></div>`;return;}
+  c.innerHTML=`<div class="grid" id="${id}-g"></div>`;
+  const g=document.getElementById(`${id}-g`);
+  videos.forEach(v=>{
+    const views=v.views||0, likes=v.likes||0;
+    const score=v.score||calcScore(views,likes,v.mins||0,v.daysAgo||0);
+    const el=document.createElement('div'); el.className='card';
     el.innerHTML=`
       ${v.thumbnail?`<img class="card-thumb" src="${v.thumbnail}" onerror="this.style.display='none'" alt="">`:''}
       <div class="card-title">${v.title}</div>
-      <div class="card-channel">📺 ${v.channel} ${v.daysAgo!==undefined?'&nbsp;·&nbsp; '+dAgo(v.publishedAt||new Date(Date.now()-v.daysAgo*86400000)):''}</div>
+      <div class="card-ch">📺 ${v.channel||''} ${v.daysAgo!==undefined?'· '+dAgo(v.publishedAt||new Date(Date.now()-v.daysAgo*86400000)):''}</div>
       <div class="pills">
         <div class="pill">👁 ${fmtV(views)}</div>
         <div class="pill">❤️ ${fmtV(likes)}</div>
-        <div class="pill">📊 ${lr}% rate</div>
-        ${dur>0?`<div class="pill">⏱ ${dur} min</div>`:''}
+        ${v.mins?`<div class="pill">⏱ ${v.mins} min</div>`:''}
+        ${v.vph?`<div class="pill">⚡ ${fmtV(v.vph)} VPH</div>`:''}
       </div>
-      <div class="score-row">
-        <div class="score-badge ${sc}">${score}/100 Viral Score</div>
-        ${v.tags?.length?`<div style="font-size:10px;color:var(--t3)">${v.tags.length} tags</div>`:''}
-      </div>
-      <div class="card-actions">
-        <a class="btn-sm bsm-red" href="${v.url}" target="_blank">▶ Watch</a>
-        ${v.channelId?`<button class="btn-sm bsm-acc" onclick="spyChannel('${v.channelId}')">🕵️ Spy Channel</button>`:''}
-        <button class="btn-sm bsm-grn" onclick="analyzeVideo('${v.url}')">📊 Analyze</button>
+      <div style="margin-bottom:10px"><span class="score-badge ${scClass(score)}">${score}/100 Viral Score</span></div>
+      <div class="card-acts">
+        <a class="bsm bsm-red" href="${v.url}" target="_blank">▶ Watch</a>
+        <button class="bsm bsm-acc" onclick="goAnalyze('${v.url}')">📊 Analyze</button>
+        ${v.channelId?`<button class="bsm bsm-grn" onclick="goChannel('${v.channelId}')">🕵️ Spy</button>`:''}
       </div>`;
     g.appendChild(el);
   });
@@ -404,191 +458,11 @@ function calcScore(v,l,m,d){
   if(v>1000000)s+=20;else if(v>500000)s+=15;else if(v>100000)s+=10;else if(v>50000)s+=5;
   if(v>0&&l/v>0.05)s+=15;else if(v>0&&l/v>0.02)s+=8;
   if(d<=3)s+=15;else if(d<=7)s+=10;else if(d<=14)s+=5;
-  if(m>=8&&m<=35)s+=5;
+  if(m>=8&&m<=25)s+=5;
   return Math.min(99,s);
 }
 
-// ── NICHE SPY ──────────────────────────────────────
-async function loadNiche(){
-  const key=getKey();const q=document.getElementById('ni-q').value.trim();
-  if(!key){alert('Add API key in Settings first!');return;}
-  if(!q){alert('Enter a niche to analyze');return;}
-  loading('ni-results',`Analyzing niche: "${q}"...`);
-  const days=document.getElementById('ni-days').value;
-  try{
-    const r=await fetch(`/api/niche?q=${encodeURIComponent(q)}&days=${days}&key=${key}`);
-    const d=await r.json();
-    if(d.error)throw new Error(d.error);
-    renderNiche('ni-results',d,q);
-  }catch(e){
-    document.getElementById('ni-results').innerHTML=`<div class="empty"><div class="em-i">❌</div><div class="em-t">${e.message}</div></div>`;
-  }
-}
-
-function renderNiche(id,data,q){
-  const c=document.getElementById(id);
-  const s=data.stats;
-  const compClass2=s.compLevel==='LOW'?'comp-low':s.compLevel==='MEDIUM'?'comp-med':'comp-high';
-  
-  c.innerHTML=`
-    <div class="detail" style="margin-bottom:20px">
-      <div class="detail-title">🔍 Niche Analysis: "${q}"</div>
-      <div class="stat-grid">
-        <div class="stat-box"><div class="stat-val">${s.totalVideos}</div><div class="stat-lbl">Videos Found</div><div class="stat-tag ta">In selected period</div></div>
-        <div class="stat-box"><div class="stat-val">${fmtV(s.avgViews)}</div><div class="stat-lbl">Avg Views</div><div class="stat-tag tg">Per video</div></div>
-        <div class="stat-box"><div class="stat-val">${fmtV(s.avgVph)}</div><div class="stat-lbl">Avg VPH</div><div class="stat-tag ty">Views per hour</div></div>
-        <div class="stat-box"><div class="stat-val">${fmtV(s.topViews)}</div><div class="stat-lbl">Top Video Views</div><div class="stat-tag tr-c">Best performer</div></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-        <div>Competition Level: <span class="comp-badge ${compClass2}">${s.compLevel}</span></div>
-        <div style="font-size:13px;color:var(--t2)">Top channel: <strong style="color:var(--acc2)">${s.topChannel}</strong></div>
-      </div>
-      <div class="insight-box">
-        <h3>💡 AI Insight</h3>
-        ${s.compLevel==='LOW'||s.compLevel==='VERY LOW'?
-          `<div class="insight-item">✅ LOW competition — excellent time to enter this niche!</div>
-           <div class="insight-item">🔥 Average ${fmtV(s.avgViews)} views per video — strong demand exists</div>
-           <div class="insight-item">🎯 Make 3-5 videos on this topic — you can dominate easily</div>`:
-          s.compLevel==='MEDIUM'?
-          `<div class="insight-item">⚠️ Medium competition — you need a unique angle</div>
-           <div class="insight-item">📊 Study top videos carefully before making yours</div>
-           <div class="insight-item">💡 Find a sub-niche with less competition</div>`:
-          `<div class="insight-item">❌ HIGH competition — difficult to rank organically</div>
-           <div class="insight-item">💡 Try more specific sub-niche instead</div>
-           <div class="insight-item">📈 Only enter if you have unique value to offer</div>`
-        }
-      </div>
-    </div>
-    <div class="shdr"><div class="stitle">Top Videos in This Niche</div></div>
-    <div class="grid" id="ni-vids"></div>`;
-  
-  const g=document.getElementById('ni-vids');
-  data.videos.forEach(v=>{
-    const sc=scoreClass(calcScore(v.views,v.likes,parseDur(v.duration||'PT5M'),v.daysAgo));
-    const el=document.createElement('div');
-    el.className='card';
-    el.innerHTML=`
-      ${v.thumbnail?`<img class="card-thumb" src="${v.thumbnail}" onerror="this.style.display='none'" alt="">`:''}
-      <div class="card-title">${v.title}</div>
-      <div class="card-channel">📺 ${v.channel} &nbsp;·&nbsp; ${dAgo(v.publishedAt)}</div>
-      <div class="pills">
-        <div class="pill">👁 ${fmtV(v.views)}</div>
-        <div class="pill">❤️ ${v.likeRatio}% rate</div>
-        <div class="pill">⚡ ${fmtV(v.vph)} VPH</div>
-      </div>
-      <div class="card-actions">
-        <a class="btn-sm bsm-red" href="${v.url}" target="_blank">▶ Watch</a>
-        <button class="btn-sm bsm-acc" onclick="spyChannel('${v.channelId}')">🕵️ Channel</button>
-        <button class="btn-sm bsm-grn" onclick="analyzeVideo('${v.url}')">📊 Analyze</button>
-      </div>`;
-    g.appendChild(el);
-  });
-}
-
-// ── CHANNEL SPY ──────────────────────────────────────
-async function loadChannel(){
-  const key=getKey();const inp=document.getElementById('ch-inp').value.trim();
-  if(!key){alert('Add API key in Settings first!');return;}
-  if(!inp){alert('Enter channel username or URL');return;}
-  loading('ch-results','Spying on channel...');
-  const ch=extractChannel(inp);
-  try{
-    const r=await fetch(`/api/channel?${ch.type}=${encodeURIComponent(ch.val)}&key=${key}`);
-    const d=await r.json();
-    if(d.error)throw new Error(d.error);
-    renderChannel('ch-results',d);
-  }catch(e){
-    document.getElementById('ch-results').innerHTML=`<div class="empty"><div class="em-i">❌</div><div class="em-t">${e.message}</div></div>`;
-  }
-}
-
-function spyChannel(id){
-  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('on'));
-  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.ntab')[2].classList.add('on');
-  document.getElementById('tab-ch').classList.add('on');
-  document.getElementById('ch-inp').value=id;
-  loadChannel();
-}
-
-function renderChannel(id,data){
-  const c=document.getElementById(id);
-  const ch=data.channel;
-  const avgV=ch.avgViewsPerVideo;
-  
-  c.innerHTML=`
-    <div class="detail" style="margin-bottom:20px">
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
-        ${ch.thumbnail?`<img src="${ch.thumbnail}" style="width:80px;height:80px;border-radius:50%;border:2px solid var(--redbdr)" onerror="this.style.display='none'" alt="">`:''}
-        <div>
-          <div style="font-size:22px;font-weight:700;color:var(--t1)">${ch.name}</div>
-          <div style="font-size:13px;color:var(--t3);margin-top:4px">${ch.country} &nbsp;·&nbsp; Since ${new Date(ch.createdAt).getFullYear()}</div>
-          <a href="${ch.url}" target="_blank" style="font-size:12px;color:var(--acc2);margin-top:4px;display:inline-block">View Channel →</a>
-        </div>
-      </div>
-      <div class="stat-grid">
-        <div class="stat-box"><div class="stat-val">${fmtV(ch.subs)}</div><div class="stat-lbl">Subscribers</div></div>
-        <div class="stat-box"><div class="stat-val">${fmtV(ch.totalViews)}</div><div class="stat-lbl">Total Views</div></div>
-        <div class="stat-box"><div class="stat-val">${ch.videoCount}</div><div class="stat-lbl">Videos</div></div>
-        <div class="stat-box"><div class="stat-val">${fmtV(avgV)}</div><div class="stat-lbl">Avg Views/Video</div></div>
-      </div>
-      ${ch.keywords?`
-      <div class="section-box">
-        <h3>🔑 Channel Keywords</h3>
-        <div class="tag-cloud">${ch.keywords.split(',').filter(Boolean).map(k=>`<span class="tag-item" onclick="searchNiche('${k.trim()}')">${k.trim()}</span>`).join('')}</div>
-      </div>`:''}
-      <div class="insight-box">
-        <h3>💡 Competitor Intelligence</h3>
-        <div class="insight-item">📊 Views/Subs ratio: ${ch.subs>0?((ch.totalViews/ch.subs)).toFixed(0):0}x — ${ch.totalViews/ch.subs>50?'Very engaged audience':'Normal engagement'}</div>
-        <div class="insight-item">🎯 Avg ${fmtV(avgV)} views per video — ${avgV>ch.subs*0.1?'Above average performance':'Below subscriber average'}</div>
-        <div class="insight-item">💡 Study their top 3 videos to find what works in this niche</div>
-        <div class="insight-item">🚀 Make similar content with better title and thumbnail</div>
-      </div>
-    </div>
-    <div class="shdr"><div class="stitle">Top Performing Videos</div></div>
-    <div class="grid" id="ch-vids"></div>`;
-  
-  const g=document.getElementById('ch-vids');
-  data.topVideos.forEach(v=>{
-    const el=document.createElement('div');
-    el.className='card';
-    el.innerHTML=`
-      ${v.thumbnail?`<img class="card-thumb" src="${v.thumbnail}" onerror="this.style.display='none'" alt="">`:''}
-      <div class="card-title">${v.title}</div>
-      <div class="card-channel">${dAgo(v.publishedAt||new Date())} &nbsp;·&nbsp; ${v.likeRatio}% like rate</div>
-      <div class="pills">
-        <div class="pill">👁 ${fmtV(v.views)}</div>
-        <div class="pill">❤️ ${fmtV(v.likes)}</div>
-        ${v.duration?`<div class="pill">⏱ ${parseDur(v.duration)} min</div>`:''}
-      </div>
-      ${v.tags?.length?`<div style="font-size:11px;color:var(--t3);margin-bottom:10px">Tags: ${v.tags.slice(0,5).join(', ')}</div>`:''}
-      <div class="card-actions">
-        <a class="btn-sm bsm-red" href="${v.url}" target="_blank">▶ Watch</a>
-        <button class="btn-sm bsm-grn" onclick="analyzeVideo('${v.url}')">📊 Analyze</button>
-        <button class="btn-sm bsm-acc" onclick="findGap('${v.title.split(' ').slice(0,4).join(' ')}')">💡 Find Gap</button>
-      </div>`;
-    g.appendChild(el);
-  });
-}
-
-// ── VIDEO ANALYZER ──────────────────────────────────────
-async function loadVideo(){
-  const key=getKey();const inp=document.getElementById('vi-inp').value.trim();
-  if(!key){alert('Add API key in Settings first!');return;}
-  if(!inp){alert('Enter video URL');return;}
-  loading('vi-results','Analyzing video...');
-  const vid=extractID(inp);
-  try{
-    const r=await fetch(`/api/video?id=${vid}&key=${key}`);
-    const d=await r.json();
-    if(d.error)throw new Error(d.error);
-    renderVideo('vi-results',d.video);
-  }catch(e){
-    document.getElementById('vi-results').innerHTML=`<div class="empty"><div class="em-i">❌</div><div class="em-t">${e.message}</div></div>`;
-  }
-}
-
-function analyzeVideo(url){
+function goAnalyze(url){
   document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('on'));
   document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.ntab')[3].classList.add('on');
@@ -597,71 +471,263 @@ function analyzeVideo(url){
   loadVideo();
 }
 
-function renderVideo(id,v){
-  const c=document.getElementById(id);
-  const sc=scoreClass(v.score);
-  
-  const titleWords=v.title.toLowerCase().split(' ');
-  const hasNumber=/\d/.test(v.title);
-  const titleLen=v.title.length;
-  
-  c.innerHTML=`
-    <div class="detail">
-      ${v.thumbnail?`<img src="${v.thumbnail}" style="width:100%;max-height:300px;object-fit:cover;border-radius:var(--r2);margin-bottom:20px;border:1px solid var(--bdr)" onerror="this.style.display='none'" alt="">`:''}
-      <div class="detail-title">${v.title}</div>
-      <div style="font-size:13px;color:var(--acc2);margin-bottom:16px">📺 ${v.channel} &nbsp;·&nbsp; <a href="${v.url}" target="_blank" style="color:var(--red)">Watch Video →</a></div>
-      
-      <div class="stat-grid">
-        <div class="stat-box"><div class="stat-val">${fmtV(v.views)}</div><div class="stat-lbl">Total Views</div><div class="stat-tag tg">Real data</div></div>
-        <div class="stat-box"><div class="stat-val">${fmtV(v.likes)}</div><div class="stat-lbl">Likes</div><div class="stat-tag ${v.likeRatio>4?'tg':'ty'}">${v.likeRatio}% rate</div></div>
-        <div class="stat-box"><div class="stat-val">${fmtV(v.comments)}</div><div class="stat-lbl">Comments</div><div class="stat-tag ta">${v.commentRatio}% rate</div></div>
-        <div class="stat-box"><div class="stat-val">${fmtV(v.vph)}</div><div class="stat-lbl">Views/Hour</div><div class="stat-tag ty">VPH</div></div>
-        <div class="stat-box"><div class="stat-val">${v.duration} min</div><div class="stat-lbl">Duration</div></div>
-        <div class="stat-box"><div class="stat-val">${dAgo(v.publishedAt)}</div><div class="stat-lbl">Published</div></div>
+function goChannel(id){
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ntab')[2].classList.add('on');
+  document.getElementById('tab-ch').classList.add('on');
+  document.getElementById('ch-inp').value=id;
+  loadChannel();
+}
+
+// ── TRENDING ──────────────────────────────────────
+async function loadTrending(){
+  if(!GK()){noKey('tr-res');return;}
+  loading('tr-res','Loading USA trending videos (5 min+ only)...');
+  const cat=document.getElementById('tr-cat').value;
+  try{
+    const r=await fetch(`/api/trending?category=${cat}`);
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    renderGrid('tr-res',d.videos);
+  }catch(e){document.getElementById('tr-res').innerHTML=`<div class="empty"><div class="em-i">❌</div><div class="em-t">${e.message}</div></div>`;}
+}
+
+// ── NICHE SPY ──────────────────────────────────────
+async function loadNiche(){
+  if(!GK()){noKey('ni-res');return;}
+  const q=document.getElementById('ni-q').value.trim();
+  if(!q)return;
+  loading('ni-res',`Analyzing niche: "${q}"...`);
+  const days=document.getElementById('ni-days').value;
+  try{
+    const r=await fetch(`/api/niche?q=${encodeURIComponent(q)}&days=${days}`);
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    const s=d.stats; const c=document.getElementById('ni-res');
+    c.innerHTML=`
+      <div class="detail" style="margin-bottom:18px">
+        <div class="detail-t">🔍 "${q}" Niche Analysis</div>
+        <div class="stat-grid">
+          <div class="sbox"><div class="sv">${s.totalVideos}</div><div class="sl">Videos Found</div><div class="st ta">5 min+ only</div></div>
+          <div class="sbox"><div class="sv">${fmtV(s.avgViews)}</div><div class="sl">Avg Views</div><div class="st tg">Per video</div></div>
+          <div class="sbox"><div class="sv">${fmtV(s.avgVph)}</div><div class="sl">Avg VPH</div><div class="st ty">Views/hour</div></div>
+          <div class="sbox"><div class="sv">${fmtV(s.topViews)}</div><div class="sl">Top Video</div><div class="st tr-c">Best performer</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <span class="comp-badge ${cmpClass(s.compLevel)}">${s.compLevel} Competition</span>
+          <span style="font-size:13px;color:var(--t2)">Top: <strong style="color:var(--acc2)">${s.topChannel}</strong></span>
+        </div>
+        <div class="ins-box">
+          <h3>💡 Verdict</h3>
+          ${s.compLevel==='LOW'||s.compLevel==='VERY LOW'?
+            '<div class="ins-item">✅ LOW competition — great time to enter!</div><div class="ins-item">🔥 Make 3-5 videos on this topic now</div><div class="ins-item">🎯 Study top videos below and make better versions</div>':
+            s.compLevel==='MEDIUM'?
+            '<div class="ins-item">⚠️ Medium competition — need unique angle</div><div class="ins-item">💡 Find a specific sub-niche with less competition</div>':
+            '<div class="ins-item">❌ High competition — hard to rank</div><div class="ins-item">💡 Try more specific sub-niche instead</div>'
+          }
+        </div>
       </div>
-      
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-        <div class="score-badge ${sc}" style="font-size:18px;padding:8px 20px">${v.score}/100 Viral Score</div>
+      <div class="shdr"><div class="stitle">Top Videos in This Niche</div></div>
+      <div class="grid" id="ni-vg"></div>`;
+    const g=document.getElementById('ni-vg');
+    d.videos.forEach(v=>{
+      const el=document.createElement('div');el.className='card';
+      el.innerHTML=`
+        ${v.thumbnail?`<img class="card-thumb" src="${v.thumbnail}" onerror="this.style.display='none'" alt="">`:''}
+        <div class="card-title">${v.title}</div>
+        <div class="card-ch">📺 ${v.channel} · ${dAgo(v.publishedAt)}</div>
+        <div class="pills"><div class="pill">👁 ${fmtV(v.views)}</div><div class="pill">⚡ ${fmtV(v.vph)} VPH</div><div class="pill">❤️ ${v.likeRatio}%</div><div class="pill">⏱ ${v.mins}min</div></div>
+        <div class="card-acts">
+          <a class="bsm bsm-red" href="${v.url}" target="_blank">▶ Watch</a>
+          <button class="bsm bsm-acc" onclick="goAnalyze('${v.url}')">📊 Analyze</button>
+          <button class="bsm bsm-grn" onclick="goChannel('${v.channelId}')">🕵️ Spy</button>
+          <button class="bsm bsm-copy" onclick="findGap('${v.title.split(' ').slice(0,5).join(' ')}')">💡 Gap</button>
+        </div>`;
+      g.appendChild(el);
+    });
+  }catch(e){document.getElementById('ni-res').innerHTML=`<div class="empty"><div class="em-i">❌</div><div class="em-t">${e.message}</div></div>`;}
+}
+
+// ── CHANNEL SPY ──────────────────────────────────────
+async function loadChannel(){
+  if(!GK()){noKey('ch-res');return;}
+  const inp=document.getElementById('ch-inp').value.trim();
+  if(!inp)return;
+  loading('ch-res','Spying on channel...');
+  const ch=extractCh(inp);
+  try{
+    const r=await fetch(`/api/channel?${ch.type}=${encodeURIComponent(ch.val)}`);
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    const ch2=d.channel; const c=document.getElementById('ch-res');
+    c.innerHTML=`
+      <div class="detail" style="margin-bottom:18px">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+          ${ch2.thumbnail?`<img src="${ch2.thumbnail}" style="width:70px;height:70px;border-radius:50%;border:2px solid var(--redbdr)" onerror="this.style.display='none'" alt="">`:''}
+          <div>
+            <div style="font-size:20px;font-weight:700">${ch2.name}</div>
+            <div style="font-size:12px;color:var(--t3);margin-top:3px">${ch2.country} · Since ${new Date(ch2.createdAt).getFullYear()} · Best day: <strong style="color:var(--acc2)">${ch2.bestUploadDay}</strong></div>
+            <a href="${ch2.url}" target="_blank" style="font-size:12px;color:var(--red);margin-top:4px;display:inline-block">View Channel →</a>
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div class="sbox"><div class="sv">${fmtV(ch2.subs)}</div><div class="sl">Subscribers</div></div>
+          <div class="sbox"><div class="sv">${fmtV(ch2.totalViews)}</div><div class="sl">Total Views</div></div>
+          <div class="sbox"><div class="sv">${ch2.videoCount}</div><div class="sl">Videos</div></div>
+          <div class="sbox"><div class="sv">${fmtV(ch2.avgViewsPerVideo)}</div><div class="sl">Avg Views/Video</div></div>
+        </div>
+        ${ch2.keywords?`
+        <div class="sec-box" style="margin-bottom:12px">
+          <h3>🔑 Channel Keywords — Click to spy niche</h3>
+          <div class="tag-cloud">${ch2.keywords.split(',').filter(Boolean).map(k=>`<span class="tag-item" onclick="goNiche('${k.trim()}')">${k.trim()}</span>`).join('')}</div>
+        </div>`:''}
+        <div class="ins-box">
+          <h3>💡 Intelligence Report</h3>
+          <div class="ins-item">📊 Views/Subs ratio: ${ch2.subs>0?((ch2.totalViews/ch2.subs)).toFixed(0):0}x — ${ch2.totalViews/ch2.subs>50?'🔥 Highly engaged':'Normal engagement'}</div>
+          <div class="ins-item">📅 Best upload day: <strong>${ch2.bestUploadDay}</strong> — Copy this schedule</div>
+          <div class="ins-item">🎯 Avg ${fmtV(ch2.avgViewsPerVideo)} views per video</div>
+          <div class="ins-item">💡 Study top 3 videos → make better version with stronger title + thumbnail</div>
+        </div>
       </div>
-      
-      ${v.tags?.length?`
-      <div class="section-box">
-        <h3>🏷️ Tags Used (${v.tags.length} total) — Click to steal</h3>
-        <div class="tag-cloud">${v.tags.map(t=>`<span class="tag-item" onclick="searchNiche('${t}')">${t}</span>`).join('')}</div>
-      </div>`:''}
-      
-      <div class="insight-box">
-        <h3>📋 Video Blueprint — How to Make Better Version</h3>
-        <div class="insight-item">📝 Title length: ${titleLen} chars — ${titleLen<60?'Good length':'Might be too long'}</div>
-        <div class="insight-item">🔢 Has numbers in title: ${hasNumber?'✅ Yes — works well':'❌ No — add a number for better CTR'}</div>
-        <div class="insight-item">⏱️ Duration: ${v.duration} min — ${v.duration>=8&&v.duration<=20?'✅ Sweet spot for YouTube':'Consider adjusting length'}</div>
-        <div class="insight-item">📊 Like ratio: ${v.likeRatio}% — ${v.likeRatio>5?'🔥 Excellent engagement':'Average engagement'}</div>
-        <div class="insight-item">💬 Comment ratio: ${v.commentRatio}% — ${v.commentRatio>0.5?'High discussion':'Normal discussion'}</div>
-        <div class="insight-item">🎯 To beat this: Better thumbnail + first 30 seconds hook + ${v.tags?.[0]||'same'} topic with unique angle</div>
-      </div>
-      
-      <div class="card-actions" style="margin-top:4px">
-        <button class="btn btn-grn" onclick="findGap('${v.title.split(' ').slice(0,5).join(' ')}')">💡 Find Content Gap</button>
-        <button class="btn btn-acc" onclick="loadCommentsByID('${v.id}')">💬 Analyze Comments</button>
-        <button class="btn btn-ghost" onclick="spyChannel('${v.channelId}')">🕵️ Spy Channel</button>
-      </div>
-    </div>`;
+      <div class="shdr"><div class="stitle">Top Performing Videos (5 min+ only)</div></div>
+      <div class="grid" id="ch-vg"></div>`;
+    const g=document.getElementById('ch-vg');
+    d.topVideos.forEach(v=>{
+      const el=document.createElement('div');el.className='card';
+      el.innerHTML=`
+        ${v.thumbnail?`<img class="card-thumb" src="${v.thumbnail}" onerror="this.style.display='none'" alt="">`:''}
+        <div class="card-title">${v.title}</div>
+        <div class="card-ch">${dAgo(v.publishedAt||new Date())} · ${v.likeRatio}% like rate · ${v.mins}min</div>
+        <div class="pills"><div class="pill">👁 ${fmtV(v.views)}</div><div class="pill">❤️ ${fmtV(v.likes)}</div></div>
+        ${v.tags?.length?`
+        <div class="sec-box" style="margin-bottom:10px;padding:10px">
+          <div class="tag-cloud">${v.tags.slice(0,8).map(t=>`<span class="tag-item" style="font-size:10px">${t}</span>`).join('')}</div>
+        </div>`:''}
+        <div class="card-acts">
+          <a class="bsm bsm-red" href="${v.url}" target="_blank">▶ Watch</a>
+          <button class="bsm bsm-acc" onclick="goAnalyze('${v.url}')">📊 Analyze</button>
+          <button class="bsm bsm-copy" onclick="copyText('${(v.tags||[]).join(', ')}',this)">📋 Copy Tags</button>
+        </div>`;
+      g.appendChild(el);
+    });
+  }catch(e){document.getElementById('ch-res').innerHTML=`<div class="empty"><div class="em-i">❌</div><div class="em-t">${e.message}</div></div>`;}
+}
+
+// ── VIDEO ANALYZER ──────────────────────────────────────
+async function loadVideo(){
+  if(!GK()){noKey('vi-res');return;}
+  const inp=document.getElementById('vi-inp').value.trim();
+  if(!inp)return;
+  loading('vi-res','Analyzing video...');
+  const vid=extractID(inp);
+  try{
+    const r=await fetch(`/api/video?id=${vid}`);
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    const v=d.video; const sc=scClass(v.score);
+    const c=document.getElementById('vi-res');
+    c.innerHTML=`
+      <div class="detail">
+        ${v.thumbnail?`<img src="${v.thumbnail}" style="width:100%;max-height:280px;object-fit:cover;border-radius:var(--r2);margin-bottom:18px;border:1px solid var(--bdr)" onerror="this.style.display='none'" alt="">`:''}
+        <div class="detail-t">${v.title}</div>
+        <div style="font-size:12px;color:var(--acc2);margin-bottom:16px">📺 ${v.channel} &nbsp;·&nbsp; <a href="${v.url}" target="_blank" style="color:var(--red)">Watch →</a></div>
+        <div class="stat-grid">
+          <div class="sbox"><div class="sv">${fmtV(v.views)}</div><div class="sl">Total Views</div><div class="st tg">Real data</div></div>
+          <div class="sbox"><div class="sv">${fmtV(v.likes)}</div><div class="sl">Likes</div><div class="st ${v.likeRatio>4?'tg':'ty'}">${v.likeRatio}%</div></div>
+          <div class="sbox"><div class="sv">${fmtV(v.comments)}</div><div class="sl">Comments</div><div class="st ta">${v.commentRatio}%</div></div>
+          <div class="sbox"><div class="sv">${fmtV(v.vph)}</div><div class="sl">Views/Hour</div></div>
+          <div class="sbox"><div class="sv">${v.mins}min</div><div class="sl">Duration</div><div class="st ${v.mins>=8&&v.mins<=25?'tg':'ty'}">${v.mins>=8&&v.mins<=25?'Sweet spot':'Check length'}</div></div>
+          <div class="sbox"><div class="sv">${dAgo(v.publishedAt)}</div><div class="sl">Published</div></div>
+        </div>
+        <div style="margin-bottom:16px"><span class="score-badge ${sc}" style="font-size:16px;padding:8px 20px">${v.score}/100 Viral Score</span></div>
+        ${v.tags?.length?`
+        <div class="sec-box">
+          <h3>🏷️ Tags (${v.tags.length}) — Click to spy · Copy all below</h3>
+          <div class="tag-cloud" style="margin-bottom:10px">${v.tags.map(t=>`<span class="tag-item" onclick="goNiche('${t}')">${t}</span>`).join('')}</div>
+          <button class="bsm bsm-copy" onclick="copyText('${v.tags.join(', ')}',this)">📋 Copy All Tags</button>
+        </div>`:''}
+        <div class="ins-box">
+          <h3>📋 Blueprint — How to Make Better Version</h3>
+          <div class="ins-item"><span class="ai-label">Title len</span>${v.titleLen} chars — ${v.titleLen<60?'✅ Good':'⚠️ Might be too long'}</div>
+          <div class="ins-item"><span class="ai-label">Numbers</span>${v.hasNumber?'✅ Has numbers — good for CTR':'❌ No numbers — add one (e.g. "7 ways...")'}</div>
+          <div class="ins-item"><span class="ai-label">Duration</span>${v.mins}min — ${v.mins>=8&&v.mins<=25?'✅ Perfect length':'Consider adjusting'}</div>
+          <div class="ins-item"><span class="ai-label">Like rate</span>${v.likeRatio}% — ${v.likeRatio>5?'🔥 Excellent':'Normal'}</div>
+          <div class="ins-item"><span class="ai-label">To beat it</span>Better thumbnail + stronger first 30 sec + same topic + unique angle</div>
+        </div>
+        <div class="card-acts" style="margin-top:4px">
+          <button class="btn btn-grn" onclick="findGap('${v.title.split(' ').slice(0,5).join(' ')}')">💡 Find Content Gap</button>
+          <button class="btn btn-acc" onclick="loadCommentsByID('${v.id}')">💬 Comments</button>
+          <button class="btn btn-ghost" onclick="goChannel('${v.channelId}')">🕵️ Spy Channel</button>
+          ${CK()?`<button class="btn btn-ghost" onclick="getAIBlueprint(${JSON.stringify({title:v.title,views:v.views,likeRatio:v.likeRatio,mins:v.mins,tags:v.tags?.slice(0,10)})})">🤖 AI Blueprint</button>`:''}
+        </div>
+        <div id="ai-blueprint-result"></div>
+      </div>`;
+  }catch(e){document.getElementById('vi-res').innerHTML=`<div class="empty"><div class="em-i">❌</div><div class="em-t">${e.message}</div></div>`;}
+}
+
+async function getAIBlueprint(data){
+  const el=document.getElementById('ai-blueprint-result');
+  el.innerHTML=`<div class="loading" style="padding:20px"><div class="spin">🤖</div><div class="load-t">AI generating blueprint...</div></div>`;
+  try{
+    const r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'blueprint',data})});
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    const res=d.result;
+    el.innerHTML=`
+      <div class="ai-box" style="margin-top:14px">
+        <h3>🤖 AI Blueprint</h3>
+        ${res.betterTitle?`<div class="ai-item"><span class="ai-label">Better Title</span><strong style="color:var(--acc2)">${res.betterTitle}</strong></div>`:''}
+        ${res.hookScript?`<div class="ai-item"><span class="ai-label">Hook (0-30s)</span>${res.hookScript}</div>`:''}
+        ${res.thumbnailTip?`<div class="ai-item"><span class="ai-label">Thumbnail</span>${res.thumbnailTip}</div>`:''}
+        ${res.structureTip?`<div class="ai-item"><span class="ai-label">Structure</span>${res.structureTip}</div>`:''}
+        ${res.uploadTime?`<div class="ai-item"><span class="ai-label">Upload Time</span>${res.uploadTime}</div>`:''}
+        ${res.expectedViews?`<div class="ai-item"><span class="ai-label">Expected</span><strong style="color:var(--grn)">${res.expectedViews}</strong></div>`:''}
+        ${res.bestTags?.length?`<div class="ai-item"><span class="ai-label">Best Tags</span><div>${res.bestTags.map(t=>`<span class="tag-item" style="font-size:10px">${t}</span>`).join(' ')}</div></div>`:''}
+      </div>`;
+  }catch(e){el.innerHTML=`<div style="color:var(--red);font-size:12px;padding:8px">${e.message}</div>`;}
 }
 
 // ── CONTENT GAPS ──────────────────────────────────────
 async function loadGaps(){
-  const key=getKey();const q=document.getElementById('gp-q').value.trim();
-  if(!key){alert('Add API key in Settings first!');return;}
-  if(!q){alert('Enter a topic to find gaps');return;}
-  loading('gp-results',`Finding gaps for: "${q}"...`);
+  if(!GK()){noKey('gp-res');return;}
+  const q=document.getElementById('gp-q').value.trim();
+  if(!q)return;
+  loading('gp-res',`Finding gaps for "${q}"...`);
   try{
-    const r=await fetch(`/api/gaps?q=${encodeURIComponent(q)}&key=${key}`);
+    const r=await fetch(`/api/gaps?q=${encodeURIComponent(q)}`);
     const d=await r.json();
     if(d.error)throw new Error(d.error);
-    renderGaps('gp-results',d,q);
-  }catch(e){
-    document.getElementById('gp-results').innerHTML=`<div class="empty"><div class="em-i">❌</div><div class="em-t">${e.message}</div></div>`;
-  }
+    const rc=d.opportunity==='EXCELLENT'?'gr-ex':d.opportunity==='GOOD'?'gr-gd':'gr-ok';
+    const c=document.getElementById('gp-res');
+    c.innerHTML=`
+      <div class="detail" style="margin-bottom:18px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <div style="flex:1"><div style="font-size:18px;font-weight:700">"${q}"</div><div style="font-size:12px;color:var(--t3);margin-top:3px">${d.totalResults.toLocaleString()} videos found (last 90 days)</div></div>
+          <span class="comp-badge ${cmpClass(d.compLevel)}">${d.compLevel}</span>
+        </div>
+        <div class="gap-rec ${rc}">${d.recommendation}</div>
+        <div class="stat-grid">
+          <div class="sbox"><div class="sv">${d.totalResults.toLocaleString()}</div><div class="sl">Total Videos</div></div>
+          <div class="sbox"><div class="sv">${fmtV(d.avgViews)}</div><div class="sl">Avg Views</div></div>
+          <div class="sbox"><div class="sv">${d.compLevel}</div><div class="sl">Competition</div></div>
+          <div class="sbox"><div class="sv">${d.opportunity}</div><div class="sl">Opportunity</div></div>
+        </div>
+      </div>
+      <div class="shdr"><div class="stitle">Top Videos in This Topic</div></div>
+      <div class="grid" id="gp-vg"></div>`;
+    const g=document.getElementById('gp-vg');
+    d.topVideos.forEach(v=>{
+      const el=document.createElement('div');el.className='card';
+      el.innerHTML=`
+        ${v.thumbnail?`<img class="card-thumb" src="${v.thumbnail}" onerror="this.style.display='none'" alt="">`:''}
+        <div class="card-title">${v.title}</div>
+        <div class="card-ch">📺 ${v.channel} · ${dAgo(v.publishedAt)}</div>
+        <div class="pills"><div class="pill">👁 ${fmtV(v.views)}</div><div class="pill">❤️ ${fmtV(v.likes)}</div></div>
+        <div class="card-acts"><a class="bsm bsm-red" href="${v.url}" target="_blank">▶ Watch</a><button class="bsm bsm-acc" onclick="goAnalyze('${v.url}')">📊 Analyze</button></div>`;
+      g.appendChild(el);
+    });
+  }catch(e){document.getElementById('gp-res').innerHTML=`<div class="empty"><div class="em-i">❌</div><div class="em-t">${e.message}</div></div>`;}
 }
 
 function findGap(q){
@@ -673,168 +739,261 @@ function findGap(q){
   loadGaps();
 }
 
-function renderGaps(id,data,q){
-  const c=document.getElementById(id);
-  const recClass=data.opportunity==='EXCELLENT'?'gap-rec-ex':data.opportunity==='GOOD'?'gap-rec-gd':'gap-rec-ok';
-  const compClass2=compClass(data.compLevel);
-  
-  c.innerHTML=`
-    <div class="gap-result">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-        <div>
-          <div style="font-size:18px;font-weight:700;color:var(--t1)">Topic: "${q}"</div>
-          <div style="font-size:13px;color:var(--t3);margin-top:4px">${data.totalResults.toLocaleString()} videos found in last 90 days</div>
-        </div>
-        <div class="comp-badge ${compClass2}" style="font-size:14px;padding:8px 16px;flex-shrink:0">${data.compLevel}</div>
-      </div>
-      <div class="gap-rec ${recClass}">${data.recommendation}</div>
-      <div class="stat-grid">
-        <div class="stat-box"><div class="stat-val">${data.totalResults.toLocaleString()}</div><div class="stat-lbl">Total Videos</div></div>
-        <div class="stat-box"><div class="stat-val">${fmtV(data.avgViews)}</div><div class="stat-lbl">Avg Views</div></div>
-        <div class="stat-box"><div class="stat-val">${data.compLevel}</div><div class="stat-lbl">Competition</div></div>
-        <div class="stat-box"><div class="stat-val">${data.opportunity}</div><div class="stat-lbl">Opportunity</div></div>
-      </div>
-    </div>
-    <div class="shdr"><div class="stitle">Top Videos in This Topic</div></div>
-    <div class="grid" id="gp-vids"></div>`;
-  
-  const g=document.getElementById('gp-vids');
-  data.topVideos.forEach(v=>{
-    const el=document.createElement('div');
-    el.className='card';
-    el.innerHTML=`
-      ${v.thumbnail?`<img class="card-thumb" src="${v.thumbnail}" onerror="this.style.display='none'" alt="">`:''}
-      <div class="card-title">${v.title}</div>
-      <div class="card-channel">📺 ${v.channel} &nbsp;·&nbsp; ${dAgo(v.publishedAt)}</div>
-      <div class="pills"><div class="pill">👁 ${fmtV(v.views)}</div><div class="pill">❤️ ${fmtV(v.likes)}</div></div>
-      <div class="card-actions">
-        <a class="btn-sm bsm-red" href="${v.url}" target="_blank">▶ Watch</a>
-        <button class="btn-sm bsm-grn" onclick="analyzeVideo('${v.url}')">📊 Analyze</button>
-      </div>`;
-    g.appendChild(el);
-  });
-}
-
 // ── COMMENTS ──────────────────────────────────────
 async function loadComments(){
-  const key=getKey();const inp=document.getElementById('cm-inp').value.trim();
-  if(!key){alert('Add API key in Settings first!');return;}
-  if(!inp){alert('Enter video URL');return;}
-  const vid=extractID(inp);
-  await loadCommentsByID(vid);
+  if(!GK()){noKey('cm-res');return;}
+  const inp=document.getElementById('cm-inp').value.trim();
+  if(!inp)return;
+  await loadCommentsByID(extractID(inp));
 }
 
 async function loadCommentsByID(vid){
-  const key=getKey();
-  loading('cm-results','Analyzing comments...');
+  loading('cm-res','Analyzing comments...');
   try{
-    const r=await fetch(`/api/comments?id=${vid}&key=${key}`);
+    const r=await fetch(`/api/comments?id=${vid}`);
     const d=await r.json();
     if(d.error)throw new Error(d.error);
-    renderComments('cm-results',d);
-  }catch(e){
-    document.getElementById('cm-results').innerHTML=`<div class="empty"><div class="em-i">❌</div><div class="em-t">${e.message}</div></div>`;
-  }
+    const a=d.analysis; const total=Math.max(a.total,1);
+    const c=document.getElementById('cm-res');
+    c.innerHTML=`
+      <div class="detail" style="margin-bottom:18px">
+        <div class="detail-t">💬 Comment Intelligence</div>
+        <div class="stat-grid">
+          <div class="sbox"><div class="sv">${a.total}</div><div class="sl">Comments Analyzed</div></div>
+          <div class="sbox"><div class="sv">${a.moreCount}</div><div class="sl">Want More</div><div class="st ${a.demandLevel==='HIGH'?'tg':'ty'}">${a.demandLevel} demand</div></div>
+          <div class="sbox"><div class="sv">${a.viralSignal}</div><div class="sl">Viral Signal</div></div>
+          <div class="sbox"><div class="sv">${a.sentiment.positive}%</div><div class="sl">Positive</div><div class="st tg">Love it</div></div>
+        </div>
+        <div class="sec-box">
+          <h3>😊 Sentiment Breakdown</h3>
+          <div class="sent-bar">
+            <div class="sb-pos" style="width:${a.sentiment.positive}%"></div>
+            <div class="sb-shock" style="width:${a.sentiment.shock}%"></div>
+            <div class="sb-neg" style="width:${a.sentiment.negative}%"></div>
+          </div>
+          <div style="display:flex;gap:14px;font-size:11px">
+            <span style="color:var(--grn)">✅ Positive: ${a.sentiment.positive}%</span>
+            <span style="color:var(--yel)">😮 Shocked: ${a.sentiment.shock}%</span>
+            <span style="color:var(--red)">❌ Negative: ${a.sentiment.negative}%</span>
+          </div>
+        </div>
+        <div class="sec-box">
+          <h3>🌍 Comment Languages</h3>
+          <div class="pills">
+            ${Object.entries(a.languages).filter(([,v])=>v>0).sort((x,y)=>y[1]-x[1]).map(([lang,count])=>`<div class="pill ${lang==='english'?'pill-grn':''}">${lang}: ${Math.round((count/total)*100)}%</div>`).join('')}
+          </div>
+          <div style="margin-top:8px;font-size:12px;color:${a.englishPct<50?'var(--grn)':'var(--t2)'}">${a.insight}</div>
+        </div>
+        <div class="sec-box">
+          <h3>🔥 Most Used Words</h3>
+          <div class="tag-cloud">${a.topWords.map(w=>`<span class="tag-item">${w.word} (${w.count})</span>`).join('')}</div>
+        </div>
+        <div class="ins-box">
+          <h3>💡 Insights</h3>
+          <div class="ins-item">${a.demandLevel==='HIGH'?'🔥 HIGH demand — people want more of this content!':a.demandLevel==='MEDIUM'?'✅ Moderate demand':'💡 Low demand signal'}</div>
+          <div class="ins-item">${a.viralSignal==='STRONG'?'⚡ STRONG viral signal — comments show shock/amazement':'📊 Moderate viral potential'}</div>
+          <div class="ins-item">${a.internationalAudience?'🌍 International audience detected — HUGE opportunity for English version!':'📊 Primarily English audience'}</div>
+          <div class="ins-item">🎯 ${a.moreCount} people asked for more — proven demand exists</div>
+        </div>
+      </div>
+      <div class="shdr"><div class="stitle">Top Comments</div></div>
+      <div id="cm-list"></div>`;
+    document.getElementById('cm-list').innerHTML=d.comments.map(cm=>`
+      <div class="com-item">
+        <div class="com-text">${cm.text.substring(0,200)}</div>
+        <div class="com-meta"><span>${cm.author}</span><span>❤️ ${cm.likes}</span></div>
+      </div>`).join('');
+  }catch(e){document.getElementById('cm-res').innerHTML=`<div class="empty"><div class="em-i">❌</div><div class="em-t">${e.message}</div></div>`;}
 }
 
-function renderComments(id,data){
-  const c=document.getElementById(id);
-  const a=data.analysis;
-  const total=a.sentiment.positive+a.sentiment.negative+a.sentiment.shock||100;
-  
-  c.innerHTML=`
-    <div class="detail" style="margin-bottom:20px">
-      <div class="detail-title">💬 Comment Intelligence Report</div>
-      <div class="stat-grid">
-        <div class="stat-box"><div class="stat-val">${a.total}</div><div class="stat-lbl">Comments Analyzed</div></div>
-        <div class="stat-box"><div class="stat-val">${a.moreCount}</div><div class="stat-lbl">Want More</div><div class="stat-tag ${a.demandLevel==='HIGH'?'tg':'ty'}">${a.demandLevel} demand</div></div>
-        <div class="stat-box"><div class="stat-val">${a.viralSignal}</div><div class="stat-lbl">Viral Signal</div></div>
-        <div class="stat-box"><div class="stat-val">${a.sentiment.positive}%</div><div class="stat-lbl">Positive</div><div class="stat-tag tg">Love it</div></div>
-      </div>
-      <div class="section-box">
-        <h3>😊 Sentiment Breakdown</h3>
-        <div class="sentiment-bar" style="margin-bottom:10px">
-          <div class="sb-pos" style="width:${a.sentiment.positive}%"></div>
-          <div class="sb-shock" style="width:${a.sentiment.shock}%"></div>
-          <div class="sb-neg" style="width:${a.sentiment.negative}%"></div>
+// ── HIDDEN GEMS ──────────────────────────────────────
+const LANGS = [
+  {code:'en',flag:'🇺🇸',name:'English',rpm:'$15-25'},
+  {code:'de',flag:'🇩🇪',name:'German',rpm:'$12-20'},
+  {code:'fr',flag:'🇫🇷',name:'French',rpm:'$10-18'},
+  {code:'ru',flag:'🇷🇺',name:'Russian',rpm:'$8-15'},
+  {code:'es',flag:'🇪🇸',name:'Spanish',rpm:'$8-14'},
+  {code:'it',flag:'🇮🇹',name:'Italian',rpm:'$10-16'},
+  {code:'pt',flag:'🇧🇷',name:'Portuguese',rpm:'$8-12'},
+  {code:'nl',flag:'🇳🇱',name:'Dutch',rpm:'$12-18'},
+  {code:'sv',flag:'🇸🇪',name:'Swedish',rpm:'$10-16'},
+  {code:'pl',flag:'🇵🇱',name:'Polish',rpm:'$7-12'},
+];
+
+function renderLangs(){
+  const g=document.getElementById('lang-grid');
+  g.innerHTML=LANGS.map(l=>`
+    <button class="lang-btn ${l.code===selLang?'sel':''}" onclick="selLang='${l.code}';renderLangs()">
+      <span class="lang-flag">${l.flag}</span>
+      <div class="lang-name">${l.name}</div>
+      <div class="lang-rpm">${l.rpm} RPM</div>
+    </button>`).join('');
+}
+
+async function loadHiddenGems(){
+  if(!GK()){noKey('hg-res');return;}
+  const maxSubs=document.getElementById('hg-subs').value;
+  const minViews=document.getElementById('hg-views').value;
+  const langName=LANGS.find(l=>l.code===selLang)?.name||selLang;
+  loading('hg-res',`Scanning ${langName} channels for hidden gems...`);
+  try{
+    const r=await fetch(`/api/hidden?lang=${selLang}&maxSubs=${maxSubs}&minViews=${minViews}`);
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    const c=document.getElementById('hg-res');
+    if(!d.gems?.length){
+      c.innerHTML=`<div class="empty"><div class="em-i">🔍</div><div class="em-t">No hidden gems found</div><div class="em-s">Try different language or lower the min views filter</div></div>`;
+      return;
+    }
+    c.innerHTML=`<div style="font-size:13px;color:var(--grn);font-weight:600;margin-bottom:16px">✅ Found ${d.gems.length} hidden gems in ${d.language}!</div>`;
+    d.gems.forEach((gem,i)=>{
+      const el=document.createElement('div');el.className='gem-card';
+      const avgV=gem.stats.avgViews;
+      const vel=gem.stats.growthVelocity;
+      el.innerHTML=`
+        <div class="gem-header">
+          ${gem.channel.thumbnail?`<img class="gem-avatar" src="${gem.channel.thumbnail}" onerror="this.style.display='none'" alt="">`:
+          `<div class="gem-avatar-placeholder">${gem.channel.name.charAt(0)}</div>`}
+          <div style="flex:1">
+            <div class="gem-ch-name">${gem.channel.name}</div>
+            <div class="gem-ch-meta">👥 ${fmtV(gem.channel.subs)} subs · ${gem.channel.language} · ${gem.channel.country}</div>
+            <div style="margin-top:5px;font-size:12px;color:var(--yel)">${gem.stats.trend}</div>
+          </div>
+          <div class="gem-badge">💎 Hidden Gem #${i+1}</div>
         </div>
-        <div style="display:flex;gap:16px;font-size:12px">
-          <span style="color:var(--grn)">✅ Positive: ${a.sentiment.positive}%</span>
-          <span style="color:var(--yel)">😮 Shocked: ${a.sentiment.shock}%</span>
-          <span style="color:var(--red)">❌ Negative: ${a.sentiment.negative}%</span>
+        <div style="font-size:12px;color:var(--t3);margin-bottom:10px">🏷️ Niche hint: <strong style="color:var(--acc2)">${gem.stats.nicheHint}</strong></div>
+        <div class="gem-videos">
+          ${gem.videos.map(v=>`
+            <div class="gem-video">
+              <div class="gem-v-title">${v.title}</div>
+              <div class="gem-v-views">${fmtV(v.views)} views</div>
+              <div class="gem-v-days">${dAgo(v.publishedAt)} · ${v.mins}min</div>
+            </div>`).join('')}
         </div>
-      </div>
-      <div class="section-box">
-        <h3>🔥 Most Used Words</h3>
-        <div class="tag-cloud">${a.topWords.map(w=>`<span class="tag-item">${w.word} (${w.count})</span>`).join('')}</div>
-      </div>
-      <div class="insight-box">
-        <h3>💡 What This Means</h3>
-        <div class="insight-item">${a.demandLevel==='HIGH'?'🔥 HIGH demand — people clearly want more of this content!':a.demandLevel==='MEDIUM'?'✅ Moderate demand — good opportunity':'💡 Low demand signal — audience is passive'}</div>
-        <div class="insight-item">${a.viralSignal==='STRONG'?'⚡ STRONG viral signal — comments show shock/amazement':'📊 Moderate viral potential based on comment analysis'}</div>
-        <div class="insight-item">🎯 Make a video on this same topic — ${a.moreCount} people already asked for more</div>
-      </div>
-    </div>
-    <div class="shdr"><div class="stitle">Top Comments</div></div>
-    <div id="cm-list"></div>`;
-  
-  const cl=document.getElementById('cm-list');
-  data.comments.forEach(cm=>{
-    const d=document.createElement('div');
-    d.className='comment-item';
-    d.innerHTML=`<div class="comment-text">${cm.text.substring(0,200)}</div><div class="comment-meta"><span>${cm.author}</span><span>❤️ ${cm.likes}</span></div>`;
-    cl.appendChild(d);
-  });
+        <div class="gem-insight">
+          <h4>💡 Opportunity Analysis</h4>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">
+            <div class="sbox"><div class="sv">${fmtV(avgV)}</div><div class="sl">Avg Views</div></div>
+            <div class="sbox"><div class="sv">${gem.channel.subs.toLocaleString()}</div><div class="sl">Subscribers</div></div>
+            <div class="sbox"><div class="sv">${vel>0?'+'+vel+'%':vel+'%'}</div><div class="sl">Growth</div></div>
+          </div>
+          <div style="font-size:12px;color:var(--t1);line-height:1.6">
+            🎯 This <strong>${gem.channel.language}</strong> channel has only <strong>${fmtV(gem.channel.subs)} subscribers</strong> but gets <strong>${fmtV(avgV)} avg views</strong> per video.<br>
+            📈 Same content in <strong>English</strong> = potentially <strong>${fmtV(Math.round(avgV*2))}+ views</strong> with ZERO competition!
+          </div>
+        </div>
+        ${gem.stats.allTags?.length?`
+        <div class="sec-box" style="margin-bottom:12px">
+          <h3>🏷️ Their Tags — steal these for your English video</h3>
+          <div class="tag-cloud">${gem.stats.allTags.map(t=>`<span class="tag-item" style="font-size:10px">${t}</span>`).join('')}</div>
+        </div>`:''}
+        <div class="gem-acts">
+          <a class="bsm bsm-red" href="${gem.channel.url}" target="_blank">📺 View Channel</a>
+          <button class="bsm bsm-acc" onclick="goChannel('${gem.channel.id}')">🕵️ Deep Spy</button>
+          <button class="bsm bsm-grn" onclick="findGap('${gem.stats.nicheHint}')">💡 Find English Gap</button>
+          ${CK()?`<button class="bsm bsm-copy" onclick="getAINiche(${JSON.stringify({channelName:gem.channel.name,subs:gem.channel.subs,avgViews:avgV,language:gem.channel.language,tags:gem.stats.allTags,nicheHint:gem.stats.nicheHint,titles:gem.videos.map(v=>v.title)})},this)">🤖 AI Niche Analysis</button>`:''}
+        </div>
+        <div id="gem-ai-${i}"></div>`;
+      c.appendChild(el);
+    });
+  }catch(e){document.getElementById('hg-res').innerHTML=`<div class="empty"><div class="em-i">❌</div><div class="em-t">${e.message}</div></div>`;}
+}
+
+async function getAINiche(data, btn){
+  const idx=[...document.querySelectorAll('.gem-card')].indexOf(btn.closest('.gem-card'));
+  const el=document.getElementById(`gem-ai-${idx}`);
+  if(!el)return;
+  el.innerHTML=`<div class="loading" style="padding:16px"><div class="spin">🤖</div><div class="load-t">AI analyzing niche...</div></div>`;
+  try{
+    const r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'niche_name',data})});
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    const res=d.result;
+    el.innerHTML=`
+      <div class="ai-box" style="margin-top:12px">
+        <h3>🤖 AI Niche Analysis</h3>
+        ${res.nicheName?`<div class="ai-item"><span class="ai-label">Niche Name</span><strong style="color:var(--grn);font-size:16px">${res.nicheName}</strong></div>`:''}
+        ${res.nicheDescription?`<div class="ai-item"><span class="ai-label">What it is</span>${res.nicheDescription}</div>`:''}
+        ${res.englishOpportunity?`<div class="ai-item"><span class="ai-label">Opportunity</span><strong style="color:var(--${res.englishOpportunity==='HIGH'?'grn':res.englishOpportunity==='MEDIUM'?'yel':'red'})">${res.englishOpportunity}</strong></div>`:''}
+        ${res.suggestedTitle?`<div class="ai-item"><span class="ai-label">Title idea</span><strong style="color:var(--acc2)">${res.suggestedTitle}</strong></div>`:''}
+        ${res.viralWindow?`<div class="ai-item"><span class="ai-label">Window</span>${res.viralWindow}</div>`:''}
+        ${res.targetAudience?`<div class="ai-item"><span class="ai-label">Audience</span>${res.targetAudience}</div>`:''}
+        ${res.contentTips?.length?`<div class="ai-item"><span class="ai-label">Tips</span><div>${res.contentTips.map(t=>`<div style="margin-bottom:3px">• ${t}</div>`).join('')}</div></div>`:''}
+      </div>`;
+  }catch(e){el.innerHTML=`<div style="color:var(--red);font-size:12px;padding:8px">${e.message}</div>`;}
 }
 
 // ── REVENUE ──────────────────────────────────────
 function calcRev(){
-  const views=parseInt(document.getElementById('rv-views').value)||0;
-  const rpm=parseInt(document.getElementById('rv-niche').value)||8;
-  const freq=parseInt(document.getElementById('rv-freq').value)||1;
-  
+  const views=parseInt(document.getElementById('rv-v').value)||0;
+  const rpm=parseInt(document.getElementById('rv-n').value)||8;
+  const freq=parseInt(document.getElementById('rv-f').value)||1;
+  const channels=parseInt(document.getElementById('rv-ch').value)||1;
   const perVideo=Math.round(views*rpm/1000);
-  const perWeek=perVideo*freq;
+  const perWeek=perVideo*freq*channels;
   const perMonth=perWeek*4;
   const perYear=perMonth*12;
-  
-  document.getElementById('rv-result').innerHTML=`
+  const sponsorship=Math.round(perVideo*2.5);
+  document.getElementById('rv-res').innerHTML=`
     <div class="rev-grid">
-      <div class="rev-card"><div class="rev-platform">Per Video</div><div class="rev-amount">$${perVideo.toLocaleString()}</div><div class="rev-rpm">RPM $${rpm}</div></div>
-      <div class="rev-card"><div class="rev-platform">Per Week (${freq} videos)</div><div class="rev-amount">$${perWeek.toLocaleString()}</div><div class="rev-rpm">${freq} videos/week</div></div>
-      <div class="rev-card"><div class="rev-platform">Per Month</div><div class="rev-amount">$${perMonth.toLocaleString()}</div><div class="rev-rpm">Estimated</div></div>
+      <div class="rev-card"><div class="rev-plat">Per Video (AdSense)</div><div class="rev-amt">$${perVideo.toLocaleString()}</div><div class="rev-rpm">RPM $${rpm}</div></div>
+      <div class="rev-card"><div class="rev-plat">Per Video (Sponsorship)</div><div class="rev-amt">$${sponsorship.toLocaleString()}</div><div class="rev-rpm">Estimated</div></div>
+      <div class="rev-card"><div class="rev-plat">Per Video (Total)</div><div class="rev-amt">$${(perVideo+sponsorship).toLocaleString()}</div><div class="rev-rpm">Both combined</div></div>
     </div>
-    <div class="insight-box">
-      <h3>💰 Revenue Projection</h3>
-      <div class="insight-item">📅 Monthly: <strong style="color:var(--grn)">$${perMonth.toLocaleString()}</strong></div>
-      <div class="insight-item">📅 Yearly: <strong style="color:var(--grn)">$${perYear.toLocaleString()}</strong></div>
-      <div class="insight-item">💡 This is AdSense only — sponsorships can add 2-5x more</div>
-      <div class="insight-item">🎯 Finance niche pays highest RPM ($22-25) in USA</div>
+    <div class="ins-box">
+      <h3>💰 Revenue Projection (${channels} channel${channels>1?'s':''})</h3>
+      <div class="ins-item">📅 Per Week: <strong style="color:var(--grn)">$${perWeek.toLocaleString()}</strong> (${freq} videos × ${channels} channels)</div>
+      <div class="ins-item">📅 Per Month: <strong style="color:var(--grn)">$${perMonth.toLocaleString()}</strong></div>
+      <div class="ins-item">📅 Per Year: <strong style="color:var(--grn)">$${perYear.toLocaleString()}</strong></div>
+      <div class="ins-item">🎯 With 20 channels at ${freq} videos/week: <strong style="color:var(--grn)">$${(perWeek*20/channels).toLocaleString()}/week</strong></div>
+      <div class="ins-item">💡 Finance niche pays highest RPM ($22-25) in USA — target it!</div>
     </div>`;
 }
 
 // ── SETTINGS ──────────────────────────────────────
-function saveKey(){
-  const k=document.getElementById('yt-key').value.trim();
-  if(!k){alert('Enter API key first');return;}
-  localStorage.setItem('yt_pro_key',k);
-  checkKey();
-  alert('✅ API Key saved!');
+function saveKeys(){
+  const yk=document.getElementById('yt-key').value.trim();
+  const ck=document.getElementById('cl-key').value.trim();
+  if(yk)localStorage.setItem('yt_pro_key',yk);
+  if(ck)localStorage.setItem('yt_cl_key',ck);
+  checkKeys();
+  const t=document.getElementById('toast');t.textContent='✅ Keys Saved!';t.classList.add('show');
+  setTimeout(()=>{t.classList.remove('show');t.textContent='✅ Copied!';},2000);
 }
 
-function checkKey(){
-  const k=getKey();
-  const el=document.getElementById('key-status');
+function checkKeys(){
+  const yk=GK(); const ck=CK();
+  const ys=document.getElementById('yt-status');
+  const cs=document.getElementById('cl-status');
+  if(ys)ys.innerHTML=yk?'<div class="ks-ok">✅ YouTube API Key is set</div>':'<div class="ks-no">❌ Not set — add key above</div>';
+  if(cs)cs.innerHTML=ck?'<div class="ks-ok">✅ Claude API Key is set</div>':'<div class="ks-no">❌ Not set — AI features disabled</div>';
+  if(yk)document.getElementById('yt-key').value=yk;
+  if(ck)document.getElementById('cl-key').value=ck;
+}
+
+// ── CHANNEL TRACKER ──────────────────────────────────────
+function addTracked(){
+  const inp=document.getElementById('track-ch').value.trim();
+  if(!inp)return;
+  trackedChannels.push({name:inp,added:new Date().toLocaleDateString()});
+  localStorage.setItem('yt_tracked',JSON.stringify(trackedChannels));
+  document.getElementById('track-ch').value='';
+  renderTracked();
+}
+
+function renderTracked(){
+  const el=document.getElementById('tracked-list');
   if(!el)return;
-  if(k){
-    el.innerHTML=`<div class="key-status ks-ok">✅ API Key is set and ready</div>`;
-    document.getElementById('yt-key').value=k;
-  } else {
-    el.innerHTML=`<div class="key-status ks-no">❌ No API key — add one above</div>`;
-  }
+  if(!trackedChannels.length){el.innerHTML=`<div style="font-size:12px;color:var(--t3)">No channels tracked yet</div>`;return;}
+  el.innerHTML=trackedChannels.map((ch,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:7px">
+      <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--t1)">${ch.name}</div><div style="font-size:11px;color:var(--t3)">Added ${ch.added}</div></div>
+      <button class="bsm bsm-acc" onclick="goChannel('${ch.name}')">🕵️ Spy</button>
+      <button class="bsm bsm-copy" onclick="trackedChannels.splice(${i},1);localStorage.setItem('yt_tracked',JSON.stringify(trackedChannels));renderTracked()">✕</button>
+    </div>`).join('');
 }
 
-function searchNiche(q){
+function goNiche(q){
   document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('on'));
   document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.ntab')[1].classList.add('on');
@@ -843,11 +1002,25 @@ function searchNiche(q){
   loadNiche();
 }
 
+// ── INIT ──────────────────────────────────────────
 window.onload=function(){
-  checkKey();
-  if(getKey())loadTrending();
+  renderLangs();
+  checkKeys();
+  calcRev();
+  renderTracked();
+  if(GK())loadTrending();
   else{
-    document.getElementById('tr-results').innerHTML=`<div class="empty"><div class="em-i">🔑</div><div class="em-t">Welcome to YouTube Pro Intelligence Tool</div><div class="em-s">Go to ⚙️ Settings tab and add your YouTube API key to get started</div></div>`;
+    document.getElementById('tr-res').innerHTML=`
+      <div class="welcome">
+        <h2>👋 Welcome to YouTube Pro Intelligence Tool</h2>
+        <p>Your all-in-one tool to find niches, spy competitors, and grow 20+ channels</p>
+        <div class="welcome-steps">
+          <div class="ws"><div class="ws-num">1</div><div class="ws-title">Add API Key</div><div class="ws-sub">Go to ⚙️ Settings and add your YouTube API key</div></div>
+          <div class="ws"><div class="ws-num">2</div><div class="ws-title">Find Hidden Gems</div><div class="ws-sub">Use 🌍 Hidden Gems to find underrated foreign channels</div></div>
+          <div class="ws"><div class="ws-num">3</div><div class="ws-title">Make Better Content</div><div class="ws-sub">Spy competitors, steal tags, use AI blueprint to win</div></div>
+        </div>
+        <button class="btn btn-acc" onclick="document.querySelectorAll('.ntab')[8].click()">⚙️ Add API Key Now →</button>
+      </div>`;
   }
 };
 </script>
