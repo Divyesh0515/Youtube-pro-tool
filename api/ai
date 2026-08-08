@@ -1,0 +1,91 @@
+module.exports = async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  const claudeKey = process.env.CLAUDE_API_KEY;
+  if (!claudeKey) return res.status(400).json({ error: 'Claude API key not configured' });
+
+  let body = '';
+  if (req.method === 'POST') {
+    try {
+      if (req.body) body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    } catch(e) {}
+  }
+
+  let parsed = {};
+  try { parsed = JSON.parse(body); } catch(e) {}
+
+  const { type, data } = parsed;
+  if (!type || !data) return res.status(400).json({ error: 'Type and data required' });
+
+  let prompt = '';
+
+  if (type === 'niche_name') {
+    prompt = `You are a YouTube niche analyst. Based on these video tags and titles from a ${data.language} channel, identify the exact niche name in English and provide insights.
+
+Channel: ${data.channelName}
+Subscribers: ${data.subs}
+Avg Views: ${data.avgViews}
+Tags found: ${data.tags?.join(', ')||'none'}
+Niche hint words: ${data.nicheHint||'none'}
+Video titles: ${data.titles?.join(' | ')||'none'}
+
+Respond in JSON format only:
+{
+  "nicheName": "exact niche name in English (2-4 words)",
+  "nicheDescription": "one sentence description",
+  "englishOpportunity": "HIGH/MEDIUM/LOW",
+  "suggestedTitle": "best YouTube title in English for this niche",
+  "viralWindow": "estimated days before competition increases",
+  "targetAudience": "who watches this content in USA",
+  "contentTips": ["tip1", "tip2", "tip3"]
+}`;
+  } else if (type === 'blueprint') {
+    prompt = `You are a YouTube content strategist. Analyze this video and create a blueprint to make a better English version.
+
+Title: ${data.title}
+Views: ${data.views}
+Like Ratio: ${data.likeRatio}%
+Duration: ${data.mins} minutes
+Tags: ${data.tags?.slice(0,10).join(', ')||'none'}
+
+Respond in JSON format only:
+{
+  "betterTitle": "improved English title with higher CTR",
+  "titleFormula": "explain the title structure used",
+  "hookScript": "first 30 seconds script idea",
+  "thumbnailTip": "specific thumbnail advice",
+  "structureTip": "video structure recommendation",
+  "bestTags": ["tag1","tag2","tag3","tag4","tag5"],
+  "uploadTime": "best day and time to upload",
+  "expectedViews": "realistic view estimate"
+}`;
+  }
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': claudeKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const d = await r.json();
+    if (d.error) return res.status(400).json({ error: d.error.message });
+    const text = d.content?.[0]?.text||'{}';
+    const clean = text.replace(/```json|```/g,'').trim();
+    try {
+      const result = JSON.parse(clean);
+      return res.status(200).json({ result });
+    } catch(e) {
+      return res.status(200).json({ result: { raw: text } });
+    }
+  } catch(e) { return res.status(500).json({ error: e.message }); }
+}
