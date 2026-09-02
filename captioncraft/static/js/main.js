@@ -13,6 +13,7 @@ const state = {
   animDur: 300,     // animation duration ms
   wordHighlight: true,  // karaoke word highlight
   highlightColor: '#FFD700', // highlight color
+  glowStrength: 0,  // 0 = auto (style default), 1-40 = override
 };
 
 /* ── FONT MAP (canvas) ── */
@@ -284,8 +285,10 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
   const l1cfg = style.line1 || {};
   const l2cfg = style.line2 || l1cfg;
 
-  const l1size = Math.floor((l1cfg._size||l1cfg.size||60)*scale*(W/500));
-  const l2size = Math.floor((l2cfg._size||l2cfg.size||40)*scale*(W/500));
+  // Use shorter dimension so text doesn't overflow on landscape videos
+  const baseDim = Math.min(W, H);
+  const l1size = Math.floor((l1cfg._size||l1cfg.size||60)*scale*(baseDim/500));
+  const l2size = Math.floor((l2cfg._size||l2cfg.size||40)*scale*(baseDim/500));
 
   const l1font = state.customFont1 ? (FONT_MAP[state.customFont1]||"'Anton'") : (FONT_MAP[l1cfg.font]||"'Anton'");
   const l2font = state.customFont2 ? (FONT_MAP[state.customFont2]||"'Dancing Script'") : (FONT_MAP[l2cfg.font]||"'Dancing Script'");
@@ -304,12 +307,13 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
   const t1 = applyCase(line1, state.customCase1||l1cfg.case||'upper');
   const t2 = line2 ? applyCase(line2, state.customCase2||l2cfg.case||'lower') : '';
 
-  // Y position
+  // Y position (baseY = bottom of line1 text)
   let baseY;
-  const totalH = l1size + l2size + 16;
-  if (pos==='bottom') baseY = H - 60 - totalH;
-  else if (pos==='top') baseY = 60;
-  else baseY = (H-totalH)/2;
+  const totalH = l1size + (t2 ? l2size + 10 : 0);
+  const marginV = Math.round(H * 0.05); // 5% margin
+  if (pos==='bottom') baseY = H - marginV - (t2 ? l2size + 10 : 0) - 4;
+  else if (pos==='top') baseY = marginV + l1size;
+  else baseY = (H - totalH) / 2 + l1size;
 
   // ── Animation transform ──
   const t_anim = Math.min(elapsed / DUR, 1);
@@ -345,24 +349,43 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
   ctx.save();
   ctx.textAlign = 'center';
   const hl = style.highlight;
+  const strokeW = Math.max(2, baseDim / 300); // crisp outline thickness scales with resolution
+  const glowOverride = state.glowStrength > 0;
+
+  // helper: draw text with stroke outline for premium look
+  function drawTextPremium(txt, x, y, fillColor, isGlow, glowColor, isBold) {
+    if (isGlow || glowOverride) {
+      const gc = glowColor || fillColor;
+      const gb = glowOverride ? state.glowStrength * (baseDim/500) : 28 * scale;
+      ctx.shadowColor = gc; ctx.shadowBlur = gb; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+      ctx.fillStyle = fillColor;
+      for (let g=0;g<3;g++) ctx.fillText(txt, x, y);
+      ctx.shadowBlur = 0;
+    } else {
+      // Drop shadow
+      ctx.shadowColor = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = Math.ceil(strokeW*1.5); ctx.shadowOffsetX = 0;
+      ctx.fillStyle = fillColor;
+      ctx.fillText(txt, x, y);
+      ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+      // Stroke outline
+      ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+      ctx.lineWidth   = strokeW * 2;
+      ctx.lineJoin    = 'round';
+      ctx.strokeText(txt, x, y);
+      ctx.fillStyle = fillColor;
+      ctx.fillText(txt, x, y);
+    }
+  }
 
   // ── Draw line1 ──
   ctx.globalAlpha = alpha1;
-  ctx.font = `${l1cfg.bold?'900':'600'} ${l1size}px ${l1font}`;
-
-  if (l1cfg.glow) {
-    ctx.shadowColor = l1cfg.color || '#00FF44';
-    ctx.shadowBlur  = 28 * scale;
-  } else {
-    ctx.shadowColor   = 'rgba(0,0,0,0.9)';
-    ctx.shadowBlur    = 10;
-    ctx.shadowOffsetY = 4;
-  }
+  ctx.font = `${l1cfg.bold?'900':'700'} ${l1size}px ${l1font}`;
+  const l1baseColor = l1cfg._color || l1cfg.color || '#00FF44';
 
   if (hl && t1) {
     ctx.save();
-    if (scl1 !== 1) { ctx.translate(W/2, baseY + offY1); ctx.scale(scl1, scl1); ctx.translate(-W/2, -(baseY + offY1)); }
-    const tw  = ctx.measureText(t1).width;
+    if (scl1 !== 1) { ctx.translate(W/2, baseY+offY1); ctx.scale(scl1,scl1); ctx.translate(-W/2,-(baseY+offY1)); }
+    const tw = ctx.measureText(t1).width;
     const pad = 14;
     ctx.fillStyle = hl.bg || '#CC0000';
     ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
@@ -371,44 +394,36 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
     ctx.fill();
     ctx.fillStyle = hl.color || '#FFFFFF';
     ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 4;
-    ctx.fillText(t1, W/2, baseY + offY1);
+    ctx.fillText(t1, W/2, baseY+offY1);
     ctx.restore();
   } else {
-    const l1baseColor = l1cfg._color || l1cfg.color || '#00FF44';
-    ctx.fillStyle = l1baseColor;
     ctx.save();
-    if (scl1 !== 1) { ctx.translate(W/2, baseY + offY1); ctx.scale(scl1, scl1); ctx.translate(-W/2, -(baseY + offY1)); }
-    if (l1cfg.glow) { for (let g=0;g<3;g++) ctx.fillText(t1, W/2, baseY + offY1); }
-    else if (activeWord && !hl && line1w.length > 0) {
+    if (scl1 !== 1) { ctx.translate(W/2,baseY+offY1); ctx.scale(scl1,scl1); ctx.translate(-W/2,-(baseY+offY1)); }
+    if (activeWord && line1w.length > 0) {
       ctx.textAlign = 'left';
-      drawLineWithHighlight(ctx, line1w.map(w=>applyCase(w, state.customCase1||l1cfg.case||'upper')), activeWord, W/2, baseY + offY1, l1size, state.highlightColor, l1baseColor, l1font, l1cfg.bold, scale);
+      drawLineWithHighlight(ctx, line1w.map(w=>applyCase(w, state.customCase1||l1cfg.case||'upper')), activeWord, W/2, baseY+offY1, l1size, state.highlightColor, l1baseColor, l1font, l1cfg.bold, scale);
       ctx.textAlign = 'center';
-    } else ctx.fillText(t1, W/2, baseY + offY1);
+    } else {
+      drawTextPremium(t1, W/2, baseY+offY1, l1baseColor, l1cfg.glow, l1cfg.color, l1cfg.bold);
+    }
     ctx.restore();
   }
 
   // ── Draw line2 ──
   if (t2) {
-    ctx.globalAlpha   = alpha2;
-    ctx.shadowBlur    = 0; ctx.shadowOffsetY = 0; ctx.shadowColor = 'transparent';
-    ctx.font          = `${l2cfg.bold?'700':'600'} ${l2size}px ${l2font}`;
-    ctx.fillStyle     = l2cfg._color || l2cfg.color || '#FF3DAD';
-    const y2 = baseY + l2size + 14;
-    if (l2cfg.glow) {
-      ctx.shadowColor = l2cfg.color || '#00FF44';
-      ctx.shadowBlur  = 28 * scale;
-    } else {
-      ctx.shadowColor   = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2;
-    }
+    const l2baseColor = l2cfg._color || l2cfg.color || '#FF3DAD';
+    ctx.globalAlpha = alpha2;
+    ctx.font = `${l2cfg.bold?'700':'600'} ${l2size}px ${l2font}`;
+    const y2 = baseY + l1size + 10;
     ctx.save();
-    if (scl2 !== 1) { ctx.translate(W/2, y2 + offY2); ctx.scale(scl2, scl2); ctx.translate(-W/2, -(y2 + offY2)); }
-    if (l2cfg.glow) { for (let g=0;g<3;g++) ctx.fillText(t2, W/2, y2 + offY2); }
-    else if (activeWord && line2w.length > 0) {
+    if (scl2 !== 1) { ctx.translate(W/2,y2+offY2); ctx.scale(scl2,scl2); ctx.translate(-W/2,-(y2+offY2)); }
+    if (activeWord && line2w.length > 0) {
       ctx.textAlign = 'left';
-      const l2baseColor = l2cfg._color || l2cfg.color || '#FF3DAD';
-      drawLineWithHighlight(ctx, line2w.map(w=>applyCase(w, state.customCase2||l2cfg.case||'lower')), activeWord, W/2, y2 + offY2, l2size, state.highlightColor, l2baseColor, l2font, l2cfg.bold, scale);
+      drawLineWithHighlight(ctx, line2w.map(w=>applyCase(w, state.customCase2||l2cfg.case||'lower')), activeWord, W/2, y2+offY2, l2size, state.highlightColor, l2baseColor, l2font, l2cfg.bold, scale);
       ctx.textAlign = 'center';
-    } else ctx.fillText(t2, W/2, y2 + offY2);
+    } else {
+      drawTextPremium(t2, W/2, y2+offY2, l2baseColor, l2cfg.glow, l2cfg.color, l2cfg.bold);
+    }
     ctx.restore();
   }
 
@@ -557,6 +572,7 @@ function setCustomAnim(val) { state.customAnim=val; drawCaptions(); }
 function setAnimDur(val) { state.animDur=parseInt(val); document.getElementById('anim-dur-val').textContent=val+'ms'; }
 function toggleWordHighlight(el) { state.wordHighlight=el.checked; drawCaptions(); }
 function setHighlightColor(val) { state.highlightColor=val; document.getElementById('hl-color-hex').textContent=val; drawCaptions(); }
+function setGlowStrength(val) { state.glowStrength=parseInt(val); document.getElementById('glow-val').textContent=val==0?'Off':val; drawCaptions(); }
 
 function showTab(name, btn) {
   document.querySelectorAll('.rtab').forEach(b=>b.classList.remove('active'));
