@@ -25,6 +25,7 @@ const FONT_MAP = {
   SpaceMono: "'Space Mono'",
   PlayfairDisplay: "'Playfair Display'",
   Caveat: "'Caveat'",
+  Poppins: "'Poppins'",
 };
 
 /* ── DRAG & DROP ── */
@@ -63,33 +64,42 @@ async function uploadFile(file) {
 }
 
 /* ── VIDEO PLAYER ── */
+let _onMeta, _onTime, _onPlay, _onPause, _onResize;
 function initVideoPlayer(file) {
   const video   = document.getElementById('main-video');
   const canvas  = document.getElementById('caption-canvas');
   const overlay = document.getElementById('drop-overlay');
+
+  // Remove old listeners to prevent memory leak on re-upload
+  if (_onMeta)   video.removeEventListener('loadedmetadata', _onMeta);
+  if (_onTime)   video.removeEventListener('timeupdate', _onTime);
+  if (_onPlay)   video.removeEventListener('play', _onPlay);
+  if (_onPause)  video.removeEventListener('pause', _onPause);
+  if (_onResize) window.removeEventListener('resize', _onResize);
+
   overlay.style.display = 'none';
   video.style.display   = 'block';
   canvas.style.display  = 'block';
   video.src = URL.createObjectURL(file);
-  video.addEventListener('loadedmetadata', () => {
+
+  _onMeta = () => {
     state.duration = video.duration;
     const vw = video.videoWidth, vh = video.videoHeight;
-    if (vw && vh) {
-      const frame = document.getElementById('video-frame');
-      frame.style.aspectRatio = `${vw}/${vh}`;
-    }
+    if (vw && vh) document.getElementById('video-frame').style.aspectRatio = `${vw}/${vh}`;
     resizeCanvas();
     document.getElementById('video-controls').style.display='flex';
     document.getElementById('adjust-bar').style.display='flex';
-  });
-  video.addEventListener('timeupdate', () => {
-    state.currentTime = video.currentTime;
-    updateProgress();
-    drawCaptions();
-  });
-  video.addEventListener('play',  () => { state.playing=true;  document.getElementById('btn-play').textContent='⏸'; startAnimLoop(); });
-  video.addEventListener('pause', () => { state.playing=false; document.getElementById('btn-play').textContent='▶'; stopAnimLoop(); drawCaptions(); });
-  window.addEventListener('resize', resizeCanvas);
+  };
+  _onTime  = () => { state.currentTime = video.currentTime; updateProgress(); drawCaptions(); };
+  _onPlay  = () => { state.playing=true;  document.getElementById('btn-play').textContent='⏸'; startAnimLoop(); };
+  _onPause = () => { state.playing=false; document.getElementById('btn-play').textContent='▶'; stopAnimLoop(); drawCaptions(); };
+  _onResize = resizeCanvas;
+
+  video.addEventListener('loadedmetadata', _onMeta);
+  video.addEventListener('timeupdate', _onTime);
+  video.addEventListener('play',  _onPlay);
+  video.addEventListener('pause', _onPause);
+  window.addEventListener('resize', _onResize);
 }
 
 function resizeCanvas() {
@@ -274,28 +284,30 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
   const anim  = state.customAnim || style.anim || 'fade';
   const DUR   = state.animDur || 300;
 
-  // Split text into 2 lines
-  const words  = text.trim().split(/\s+/);
-  const mid    = Math.ceil(words.length/2);
-  const line1w = words.slice(0,mid);
-  const line2w = words.slice(mid);
-  const line1  = line1w.join(' ');
-  const line2  = line2w.join(' ');
+  // Copy style configs so we never mutate STYLES object
+  const l1cfg = Object.assign({}, style.line1 || {});
+  const hasLine2Style = !!(style.line2 && (style.line2.font || style.line2.color));
+  const l2cfg = hasLine2Style ? Object.assign({}, style.line2) : null;
 
-  const l1cfg = style.line1 || {};
-  const l2cfg = style.line2 || l1cfg;
+  // Apply custom overrides (on copies, not originals)
+  if (state.customSize1)  l1cfg.size  = state.customSize1;
+  if (state.customColor1) l1cfg.color = state.customColor1;
+  if (l2cfg && state.customSize2)  l2cfg.size  = state.customSize2;
+  if (l2cfg && state.customColor2) l2cfg.color = state.customColor2;
 
-  // Scale font by shorter dimension; /1000 keeps sizes sane on HD video
-  const baseDim = Math.min(W, H);
-  let l1size = Math.floor((l1cfg._size||l1cfg.size||60)*scale*(baseDim/1000));
-  let l2size = Math.floor((l2cfg._size||l2cfg.size||40)*scale*(baseDim/1000));
-
-  const l1font = state.customFont1 ? (FONT_MAP[state.customFont1]||"'Anton'") : (FONT_MAP[l1cfg.font]||"'Anton'");
-  const l2font = state.customFont2 ? (FONT_MAP[state.customFont2]||"'Dancing Script'") : (FONT_MAP[l2cfg.font]||"'Dancing Script'");
-  if (state.customSize1) l1cfg._size = state.customSize1;
-  if (state.customSize2) l2cfg._size = state.customSize2;
-  if (state.customColor1) l1cfg._color = state.customColor1;
-  if (state.customColor2) l2cfg._color = state.customColor2;
+  // Split: only split into 2 lines if style has a line2 config
+  const words = text.trim().split(/\s+/);
+  let line1w, line2w;
+  if (hasLine2Style && words.length > 1) {
+    const mid = Math.ceil(words.length / 2);
+    line1w = words.slice(0, mid);
+    line2w = words.slice(mid);
+  } else {
+    line1w = words;
+    line2w = [];
+  }
+  const line1 = line1w.join(' ');
+  const line2 = line2w.join(' ');
 
   const applyCase = (str, c) => {
     if (c==='upper') return str.toUpperCase();
@@ -305,52 +317,67 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
   };
 
   const t1 = applyCase(line1, state.customCase1||l1cfg.case||'upper');
-  const t2 = line2 ? applyCase(line2, state.customCase2||l2cfg.case||'lower') : '';
+  const t2 = (l2cfg && line2) ? applyCase(line2, state.customCase2||l2cfg.case||'lower') : '';
+
+  // Scale font by shorter dimension; /1000 keeps sizes sane on HD video
+  const baseDim = Math.min(W, H);
+  let l1size = Math.floor((l1cfg.size||60)*scale*(baseDim/1000));
+  let l2size = l2cfg ? Math.floor((l2cfg.size||40)*scale*(baseDim/1000)) : 0;
+
+  const l1font = state.customFont1 ? (FONT_MAP[state.customFont1]||"'Anton'") : (FONT_MAP[l1cfg.font]||"'Anton'");
+  const l2font = l2cfg ? (state.customFont2 ? (FONT_MAP[state.customFont2]||"'Dancing Script'") : (FONT_MAP[l2cfg.font]||"'Dancing Script'")) : "'Dancing Script'";
 
   // Auto-shrink: reduce font size until text fits within 90% canvas width
   const maxW = W * 0.90;
-  const _tmpCtx = ctx;
-  (function shrinkFit() {
-    _tmpCtx.font = `${l1cfg.bold?'900':'700'} ${l1size}px ${l1font}`;
-    while (l1size > 18 && _tmpCtx.measureText(t1).width > maxW) l1size = Math.floor(l1size * 0.93);
-    if (t2) {
-      _tmpCtx.font = `${l2cfg.bold?'700':'600'} ${l2size}px ${l2font}`;
-      while (l2size > 14 && _tmpCtx.measureText(t2).width > maxW) l2size = Math.floor(l2size * 0.93);
-    }
-  })();
+  ctx.font = `${l1cfg.bold?'900':'700'} ${l1size}px ${l1font}`;
+  while (l1size > 18 && ctx.measureText(t1).width > maxW) l1size = Math.floor(l1size * 0.93);
+  if (t2 && l2cfg) {
+    ctx.font = `${l2cfg.bold?'700':'600'} ${l2size}px ${l2font}`;
+    while (l2size > 14 && ctx.measureText(t2).width > maxW) l2size = Math.floor(l2size * 0.93);
+  }
 
-  // Y position (baseY = bottom of line1 text)
-  let baseY;
-  const totalH = l1size + (t2 ? l2size + 10 : 0);
-  const marginV = Math.round(H * 0.05); // 5% margin
-  if (pos==='bottom') baseY = H - marginV - (t2 ? l2size + 10 : 0) - 4;
-  else if (pos==='top') baseY = marginV + l1size;
-  else baseY = (H - totalH) / 2 + l1size;
+  // Y position: anchor line2 at bottom margin, line1 above it
+  const marginV = Math.round(H * 0.05);
+  const gap = Math.round(l1size * 0.15);
+  let y1, y2;
+  if (pos === 'bottom') {
+    y2 = t2 ? H - marginV : 0;
+    y1 = t2 ? y2 - l2size - gap : H - marginV;
+  } else if (pos === 'top') {
+    y1 = marginV + l1size;
+    y2 = y1 + l2size + gap;
+  } else {
+    const totalH = l1size + (t2 ? l2size + gap : 0);
+    y1 = (H - totalH) / 2 + l1size;
+    y2 = y1 + l2size + gap;
+  }
+  const baseY = y1;
 
   // ── Animation transform ──
   const t_anim = Math.min(elapsed / DUR, 1);
   let offY1 = 0, offY2 = 0, scl1 = 1, scl2 = 1, alpha1 = 1, alpha2 = 1;
 
+  // clamp helpers — prevent negative t from breaking easing functions
+  const t2p = (delay) => Math.min(Math.max((elapsed - delay) / DUR, 0), 1);
+
   if (anim === 'slide_up') {
-    const p = easeOut(t_anim);
-    offY1 = (1 - p) * l1size * 0.6;
-    offY2 = (1 - easeOut(Math.min((elapsed - 80) / DUR, 1))) * l2size * 0.6;
+    offY1 = (1 - easeOut(t_anim)) * l1size * 0.6;
+    offY2 = (1 - easeOut(t2p(80))) * l2size * 0.6;
     alpha1 = Math.min(elapsed / 150, 1);
     alpha2 = Math.min(Math.max((elapsed - 80) / 150, 0), 1);
   } else if (anim === 'pop') {
     scl1  = easeOutBack(t_anim);
-    scl2  = easeOutBack(Math.min((elapsed - 80) / DUR, 1));
+    scl2  = easeOutBack(t2p(80));
     alpha1 = Math.min(elapsed / 120, 1);
     alpha2 = Math.min(Math.max((elapsed - 80) / 120, 0), 1);
   } else if (anim === 'bounce') {
-    offY1  = (1 - easeOutBounce(t_anim)) * (-l1size * 0.5);
-    offY2  = (1 - easeOutBounce(Math.min((elapsed - 100) / DUR, 1))) * (-l2size * 0.5);
+    offY1 = (1 - easeOutBounce(t_anim)) * (-l1size * 0.5);
+    offY2 = (1 - easeOutBounce(t2p(100))) * (-l2size * 0.5);
     alpha1 = Math.min(elapsed / 100, 1);
     alpha2 = Math.min(Math.max((elapsed - 100) / 100, 0), 1);
   } else if (anim === 'blur_slide') {
-    const p = easeOut(t_anim);
-    offY1  = (1 - p) * l1size * 0.4;
-    offY2  = (1 - easeOut(Math.min((elapsed - 100) / DUR, 1))) * l2size * 0.4;
+    offY1 = (1 - easeOut(t_anim)) * l1size * 0.4;
+    offY2 = (1 - easeOut(t2p(100))) * l2size * 0.4;
     alpha1 = Math.min(elapsed / 200, 1);
     alpha2 = Math.min(Math.max((elapsed - 100) / 200, 0), 1);
   } else { // fade
@@ -435,11 +462,10 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
   }
 
   // ── Draw line2 ──
-  if (t2) {
-    const l2baseColor = l2cfg._color || l2cfg.color || '#FF3DAD';
+  if (t2 && l2cfg) {
+    const l2baseColor = l2cfg.color || '#FF3DAD';
     ctx.globalAlpha = alpha2;
     ctx.font = `${l2cfg.bold?'700':'600'} ${l2size}px ${l2font}`;
-    const y2 = baseY + l1size + 10;
     ctx.save();
     if (scl2 !== 1) { ctx.translate(W/2,y2+offY2); ctx.scale(scl2,scl2); ctx.translate(-W/2,-(y2+offY2)); }
     if (activeWord && line2w.length > 0) {
@@ -458,11 +484,10 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
 // Draw text with one word highlighted (karaoke)
 function drawLineWithHighlight(ctx, words, activeWord, x, y, size, hlColor, baseColor, font, bold, scale) {
   const activeNorm = activeWord ? activeWord.word.trim().toLowerCase().replace(/[^a-z0-9]/g,'') : '';
-  // Measure total width
   ctx.font = `${bold?'900':'600'} ${size}px ${font}`;
-  const fullText = words.join(' ');
-  const totalW = ctx.measureText(fullText).width;
-  let curX = x - totalW / 2;
+  // Measure full text width including spaces for proper centering
+  const totalW = ctx.measureText(words.join(' ')).width;
+  let curX = x - totalW / 2; // start from left edge of centered text block
 
   words.forEach((word, i) => {
     const ww = ctx.measureText(word).width;
@@ -479,15 +504,15 @@ function drawLineWithHighlight(ctx, words, activeWord, x, y, size, hlColor, base
       ctx.beginPath();
       roundRect(ctx, curX - pad, y - size + 2, ww + pad*2, size + 8, 5);
       ctx.fill();
-      // Draw word in contrast color
+      // Draw word — textAlign is 'left' so x = left edge of word
       const contrastColor = isLightColor(hlColor) ? '#000000' : '#FFFFFF';
       ctx.fillStyle = contrastColor;
       ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0;
-      ctx.fillText(word, curX + ww/2, y);
+      ctx.fillText(word, curX, y);
       ctx.restore();
     } else {
       ctx.fillStyle = baseColor;
-      ctx.fillText(word, curX + ww/2, y);
+      ctx.fillText(word, curX, y);
     }
     curX += ww + spaceW;
   });
