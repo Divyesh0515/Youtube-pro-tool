@@ -322,47 +322,67 @@ function roundRect(ctx, x, y, w, h, r) {
 
 /* ── STYLE THUMBNAILS ── */
 function drawAllThumbs() {
-  Object.keys(STYLES).forEach(key=>{
-    const canvas = document.getElementById('canvas-thumb-'+key);
+  Object.keys(STYLES).forEach(key => {
+    const canvas = document.getElementById('canvas-thumb-' + key);
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const W=canvas.width, H=canvas.height;
-    ctx.clearRect(0,0,W,H);
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // Dark gradient background
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#0a0a14');
+    bg.addColorStop(1, '#12121e');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
     const style = STYLES[key];
-    const l1=style.line1||{};
-    const l2=style.line2||{};
-    const l1size=Math.floor((l1.size||60)*0.42);
-    const l2size=Math.floor((l2.size||40)*0.38);
-    const l1font=FONT_MAP[l1.font]||"'Anton'";
-    const l2font=FONT_MAP[l2.font]||"'Dancing Script'";
-    ctx.textAlign='center';
+    const l1 = style.line1 || {};
+    const l2 = style.line2 || {};
+    const hl = style.highlight;
 
-    const hl=style.highlight;
-    const t1='MAKE IT';
-    const t2='look good';
+    const l1size = Math.floor((l1.size || 60) * (H / 160));
+    const l2size = Math.floor((l2.size || 40) * (H / 190));
+    const l1font = FONT_MAP[l1.font] || "'Anton'";
+    const l2font = FONT_MAP[l2.font] || "'Dancing Script'";
 
-    ctx.font=`${l1.bold?'900':'600'} ${l1size}px ${l1font}`;
+    const t1 = 'CAPTION';
+    const t2 = 'style preview';
+    const hasLine2 = !!(l2.font || l2.color);
+    const totalH = hasLine2 ? l1size + l2size + 6 : l1size;
+    const startY = (H + totalH) / 2 - (hasLine2 ? l2size + 4 : 0);
+
+    ctx.textAlign = 'center';
+    ctx.font = `${l1.bold ? '900' : '600'} ${l1size}px ${l1font}`;
+
     if (hl) {
-      const tw=ctx.measureText(t1).width;
-      const pad=6;
-      ctx.fillStyle=hl.bg||'#CC0000';
+      const tw = ctx.measureText(t1).width;
+      const pad = 8;
+      ctx.fillStyle = hl.bg || '#CC0000';
+      ctx.shadowBlur = 0;
       ctx.beginPath();
-      roundRect(ctx,W/2-tw/2-pad,H/2-l1size-2,tw+pad*2,l1size+6,5);
+      roundRect(ctx, W/2-tw/2-pad, startY-l1size+2, tw+pad*2, l1size+6, 6);
       ctx.fill();
-      ctx.fillStyle=hl.color||'#FFF';
+      ctx.fillStyle = hl.color || '#FFF';
+      ctx.shadowColor = 'rgba(0,0,0,.4)'; ctx.shadowBlur = 3;
     } else {
-      ctx.fillStyle=l1.color||'#00FF44';
-      if(l1.glow){ctx.shadowColor=l1.color;ctx.shadowBlur=10;}
-      else{ctx.shadowColor='rgba(0,0,0,.7)';ctx.shadowBlur=4;}
+      ctx.fillStyle = l1.color || '#00FF44';
+      if (l1.glow) {
+        ctx.shadowColor = l1.color || '#00FF44';
+        ctx.shadowBlur = 12;
+        ctx.fillText(t1, W/2, startY);
+      } else {
+        ctx.shadowColor = 'rgba(0,0,0,.8)'; ctx.shadowBlur = 5; ctx.shadowOffsetY = 2;
+      }
     }
-    ctx.fillText(t1,W/2,H/2);
+    ctx.fillText(t1, W/2, startY);
 
-    if(l2.font||l2.color){
-      ctx.shadowBlur=0;ctx.shadowColor='transparent';
-      ctx.font=`${l2.bold?'700':'600'} ${l2size}px ${l2font}`;
-      ctx.fillStyle=l2.color||'#FF3DAD';
-      ctx.shadowColor='rgba(0,0,0,.6)';ctx.shadowBlur=3;
-      ctx.fillText(t2,W/2,H/2+l2size+4);
+    if (hasLine2) {
+      ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; ctx.shadowColor = 'transparent';
+      ctx.font = `${l2.bold ? '700' : '500'} ${l2size}px ${l2font}`;
+      ctx.fillStyle = l2.color || '#FF3DAD';
+      ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = 4;
+      ctx.fillText(t2, W/2, startY + l2size + 6);
     }
   });
 }

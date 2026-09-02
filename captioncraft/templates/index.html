@@ -31,7 +31,7 @@
       {% for key, s in styles.items() %}
       <div class="style-card {% if key == 'mehfil' %}active{% endif %}" data-style="{{ key }}" onclick="selectStyle('{{ key }}', this)">
         <div class="style-thumb" id="thumb-{{ key }}">
-          <canvas class="thumb-canvas" width="260" height="90" id="canvas-thumb-{{ key }}"></canvas>
+          <canvas class="thumb-canvas" width="260" height="110" id="canvas-thumb-{{ key }}"></canvas>
         </div>
         <div class="style-card-footer">
           <span class="style-name">{{ s.name }}</span>
