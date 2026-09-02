@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+import httpx._utils as _httpx_utils
+_orig_normalize = _httpx_utils.normalize_header_value
+def _patched_normalize(value, encoding):
+    return _orig_normalize(value, 'latin-1')
+_httpx_utils.normalize_header_value = _patched_normalize
+
 import os
 import json
 import uuid
@@ -10,101 +16,78 @@ from openai import OpenAI
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB
+app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024
 app.config['UPLOAD_FOLDER'] = Path('uploads')
 app.config['EXPORT_FOLDER'] = Path('exports')
+app.config['FONTS_FOLDER'] = Path('fonts')
 
 ALLOWED_EXTENSIONS = {'mp4', 'mov', 'avi', 'mkv'}
-_api_key = os.environ.get('OPENAI_API_KEY', '')
-client = OpenAI(api_key=_api_key.encode('ascii', errors='ignore').decode('ascii'))
+client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', ''))
 
-CAPTION_STYLES = {
+STYLES = {
     'mehfil': {
-        'name': 'Mehfil',
-        'primary_font': 'BebasNeue',
-        'primary_color': '#00FF88',
-        'secondary_font': 'DancingScript',
-        'secondary_color': '#FF69B4',
-        'bg': None,
-        'glow': True,
+        'name': 'Mehfil', 'tag': 'CLEAN',
+        'line1': {'font': 'BebasNeue', 'color': '#00FF44', 'size': 72, 'bold': True, 'case': 'upper'},
+        'line2': {'font': 'DancingScript', 'color': '#FF3DAD', 'size': 48, 'bold': False, 'case': 'lower'},
     },
     'hawabaaz': {
-        'name': 'Hawabaaz',
-        'primary_font': 'Anton',
-        'primary_color': '#FFD700',
-        'secondary_font': 'DancingScript',
-        'secondary_color': '#FF69B4',
-        'bg': None,
-        'glow': False,
-    },
-    'mrbeast': {
-        'name': 'Mr Beast Style',
-        'primary_font': 'Anton',
-        'primary_color': '#FFFFFF',
-        'pill_bg': '#CC0000',
-        'bg': 'pill',
-        'glow': False,
-    },
-    'hero_emphasis': {
-        'name': 'Hero Emphasis',
-        'label_font': 'Montserrat',
-        'label_color': '#FFFFFF',
-        'main_font': 'Anton',
-        'main_color': '#FF6A00',
-        'bg': None,
-        'glow': False,
-    },
-    'hero_glow': {
-        'name': 'Hero Glow',
-        'primary_font': 'Anton',
-        'primary_color': '#00FF88',
-        'bg': None,
-        'glow': True,
-        'glow_color': '#00FF88',
-    },
-    'poetic_stack': {
-        'name': 'Poetic Stack',
-        'top_font': 'DancingScript',
-        'top_color': '#FF69B4',
-        'bottom_font': 'Anton',
-        'bottom_color': '#FFFFFF',
-        'bg': None,
-        'glow': False,
+        'name': 'Hawabaaz', 'tag': 'CLEAN',
+        'line1': {'font': 'BebasNeue', 'color': '#FFD700', 'size': 72, 'bold': True, 'case': 'upper'},
+        'line2': {'font': 'DancingScript', 'color': '#FF3DAD', 'size': 48, 'bold': False, 'case': 'lower'},
     },
     'split_line': {
-        'name': 'Split-Line',
-        'primary_font': 'Montserrat',
-        'primary_color': '#BF5FFF',
-        'secondary_font': 'Montserrat',
-        'secondary_color': '#FF69B4',
-        'italic': True,
-        'bg': None,
-        'glow': False,
+        'name': 'Split Line', 'tag': 'CLEAN',
+        'line1': {'font': 'Anton', 'color': '#FFD700', 'size': 64, 'bold': True, 'case': 'upper'},
+        'line2': {'font': 'Montserrat', 'color': '#FFFFFF', 'size': 36, 'bold': False, 'case': 'lower'},
     },
-    'caption_scale': {
-        'name': 'Caption Scale',
-        'small_font': 'Montserrat',
-        'small_color': '#FFFFFF',
-        'big_font': 'Anton',
-        'big_color': '#00FFFF',
-        'bg': None,
-        'glow': False,
+    'hero_emphasis': {
+        'name': 'Hero Emphasis', 'tag': 'PREMIUM',
+        'line1': {'font': 'Montserrat', 'color': '#FFFFFF', 'size': 32, 'bold': False, 'case': 'title'},
+        'line2': {'font': 'Anton', 'color': '#FF6A00', 'size': 80, 'bold': True, 'case': 'upper'},
+    },
+    'hero_glow': {
+        'name': 'Hero Glow', 'tag': 'PREMIUM',
+        'line1': {'font': 'Montserrat', 'color': '#FFFFFF', 'size': 32, 'bold': False, 'case': 'title'},
+        'line2': {'font': 'Anton', 'color': '#00FF44', 'size': 80, 'bold': True, 'case': 'upper', 'glow': True},
+    },
+    'poetic_stack': {
+        'name': 'Poetic Stack', 'tag': 'BLUR-SLIDE',
+        'line1': {'font': 'Anton', 'color': '#FF3DAD', 'size': 60, 'bold': True, 'case': 'upper'},
+        'line2': {'font': 'DancingScript', 'color': '#FFFFFF', 'size': 40, 'bold': False, 'case': 'lower'},
+    },
+    'box_highlight': {
+        'name': 'BOX-Highlight', 'tag': 'CLEAN',
+        'line1': {'font': 'Anton', 'color': '#FFFFFF', 'size': 60, 'bold': True, 'case': 'upper'},
+        'highlight': {'bg': '#8B5CF6', 'color': '#FFFFFF'},
     },
     'inline_emphasis': {
-        'name': 'Inline Emphasis',
-        'primary_font': 'Montserrat',
-        'primary_color': '#FFFFFF',
-        'highlight_color': '#FF69B4',
-        'pill_bg': '#FF69B4',
-        'bg': 'inline_pill',
-        'glow': False,
+        'name': 'Inline Emphasis', 'tag': 'CLEAN',
+        'line1': {'font': 'Anton', 'color': '#FFFFFF', 'size': 60, 'bold': True, 'case': 'upper'},
+        'highlight': {'bg': '#00FF44', 'color': '#000000'},
+    },
+    'neon_pop': {
+        'name': 'Neon Pop', 'tag': 'CLEAN',
+        'line1': {'font': 'Anton', 'color': '#00FFFF', 'size': 64, 'bold': True, 'case': 'upper'},
+        'line2': {'font': 'Anton', 'color': '#FFFFFF', 'size': 64, 'bold': True, 'case': 'upper'},
+    },
+    'bold_bounce': {
+        'name': 'Bold Bounce', 'tag': 'CLEAN',
+        'line1': {'font': 'Anton', 'color': '#FFFFFF', 'size': 68, 'bold': True, 'case': 'upper'},
+        'line2': {'font': 'Anton', 'color': '#BF5FFF', 'size': 68, 'bold': True, 'case': 'upper'},
+    },
+    'caption_joint': {
+        'name': 'Caption Joint', 'tag': 'CLEAN',
+        'line1': {'font': 'Anton', 'color': '#FF3333', 'size': 68, 'bold': True, 'case': 'upper'},
+        'line2': {'font': 'DancingScript', 'color': '#FFFFFF', 'size': 44, 'bold': False, 'case': 'lower'},
+    },
+    'mrbeast': {
+        'name': 'Mr Beast', 'tag': 'VIRAL',
+        'line1': {'font': 'Anton', 'color': '#FFFFFF', 'size': 72, 'bold': True, 'case': 'upper'},
+        'highlight': {'bg': '#CC0000', 'color': '#FFFFFF'},
     },
     'raw_archive': {
-        'name': 'Raw Archive',
-        'primary_font': 'SpaceMono',
-        'primary_color': '#FFFFFF',
-        'bg': None,
-        'glow': False,
+        'name': 'Raw Archive', 'tag': 'CLEAN',
+        'line1': {'font': 'SpaceMono', 'color': '#FFFFFF', 'size': 40, 'bold': False, 'case': 'none'},
     },
 }
 
@@ -115,8 +98,7 @@ def allowed_file(filename):
 
 @app.route('/')
 def index():
-    styles = {k: v['name'] for k, v in CAPTION_STYLES.items()}
-    return render_template('index.html', styles=styles)
+    return render_template('index.html', styles=STYLES)
 
 
 @app.route('/upload', methods=['POST'])
@@ -126,12 +108,10 @@ def upload_video():
     file = request.files['video']
     if not file or not allowed_file(file.filename):
         return jsonify({'error': 'Invalid file type'}), 400
-
     job_id = str(uuid.uuid4())
     filename = f"{job_id}_{secure_filename(file.filename)}"
     filepath = app.config['UPLOAD_FOLDER'] / filename
     file.save(filepath)
-
     return jsonify({'job_id': job_id, 'filename': filename, 'path': str(filepath)})
 
 
@@ -142,7 +122,6 @@ def transcribe():
     if not video_path.exists():
         return jsonify({'error': 'Video not found'}), 404
 
-    # Extract audio to temp file
     audio_path = video_path.with_suffix('.mp3')
     try:
         subprocess.run([
@@ -156,9 +135,20 @@ def transcribe():
                 model='whisper-1',
                 file=f,
                 response_format='verbose_json',
-                timestamp_granularities=['segment']
+                timestamp_granularities=['word', 'segment']
             )
 
+        # Build word-level captions
+        words = []
+        if hasattr(transcript, 'words') and transcript.words:
+            for w in transcript.words:
+                words.append({
+                    'word': w.word.strip(),
+                    'start': round(w.start, 3),
+                    'end': round(w.end, 3),
+                })
+
+        # Build segment captions
         captions = []
         for seg in transcript.segments:
             captions.append({
@@ -168,7 +158,7 @@ def transcribe():
                 'text': seg.text.strip(),
             })
 
-        return jsonify({'captions': captions})
+        return jsonify({'captions': captions, 'words': words})
     finally:
         if audio_path.exists():
             audio_path.unlink()
@@ -179,15 +169,16 @@ def export_video():
     data = request.json
     video_path = Path(data.get('path', ''))
     captions = data.get('captions', [])
-    style_key = data.get('style', 'mrbeast')
+    style_key = data.get('style', 'mehfil')
+    font_size_scale = float(data.get('font_size_scale', 1.0))
+    position = data.get('position', 'bottom')  # bottom / center / top
 
     if not video_path.exists():
         return jsonify({'error': 'Video not found'}), 404
 
-    style = CAPTION_STYLES.get(style_key, CAPTION_STYLES['mrbeast'])
+    style = STYLES.get(style_key, STYLES['mehfil'])
     job_id = str(uuid.uuid4())
 
-    # Write SRT file
     srt_path = Path(tempfile.mktemp(suffix='.srt'))
     with open(srt_path, 'w', encoding='utf-8') as f:
         for i, cap in enumerate(captions, 1):
@@ -198,17 +189,17 @@ def export_video():
     output_path = app.config['EXPORT_FOLDER'] / f"{job_id}_captioned.mp4"
 
     try:
-        filter_str = _build_filter(style, str(srt_path))
+        filter_str = _build_ffmpeg_filter(style, str(srt_path), font_size_scale, position)
         cmd = [
             'ffmpeg', '-i', str(video_path),
             '-vf', filter_str,
-            '-c:v', 'libx264', '-crf', '23', '-preset', 'fast',
+            '-c:v', 'libx264', '-crf', '18', '-preset', 'fast',
             '-c:a', 'copy',
             str(output_path), '-y'
         ]
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
-            return jsonify({'error': result.stderr[-2000:]}), 500
+            return jsonify({'error': result.stderr[-3000:]}), 500
 
         return jsonify({'export_id': job_id, 'filename': output_path.name})
     finally:
@@ -232,66 +223,67 @@ def _seconds_to_srt(seconds):
     return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
 
 
-def _build_filter(style, srt_path):
-    # Escape path for ffmpeg filter
-    srt_escaped = srt_path.replace('\\', '/').replace(':', '\\:')
-
-    base_opts = f"subtitles='{srt_escaped}'"
-
-    name = style.get('name', '')
-    font_size = 22
-    bold = 1
-    outline = 2
-    shadow = 0
-    primary_color = _hex_to_ass(style.get('primary_color', '#FFFFFF'))
-    outline_color = '&H00000000'
-    bg_color = '&H00000000'
-
-    if 'mrbeast' in name.lower():
-        primary_color = _hex_to_ass('#FFFFFF')
-        outline_color = _hex_to_ass('#CC0000')
-        outline = 4
-        font_size = 26
-    elif 'hero glow' in name.lower() or 'hero_glow' in name.lower():
-        outline_color = _hex_to_ass('#00FF88')
-        outline = 3
-        shadow = 2
-    elif 'raw archive' in name.lower():
-        bold = 0
-
-    force_style = (
-        f"FontName={_style_font(style)},"
-        f"FontSize={font_size},"
-        f"Bold={bold},"
-        f"PrimaryColour={primary_color},"
-        f"OutlineColour={outline_color},"
-        f"BackColour={bg_color},"
-        f"Outline={outline},"
-        f"Shadow={shadow},"
-        f"Alignment=2,"
-        f"MarginV=40"
-    )
-
-    return f"subtitles='{srt_escaped}':force_style='{force_style}'"
-
-
-def _style_font(style):
+def _get_font_path(font_name):
     font_map = {
-        'BebasNeue': 'Bebas Neue',
-        'DancingScript': 'Dancing Script',
-        'Anton': 'Anton',
-        'Montserrat': 'Montserrat',
-        'SpaceMono': 'Space Mono',
+        'BebasNeue': 'fonts/BebasNeue.ttf',
+        'DancingScript': 'fonts/DancingScript.ttf',
+        'Anton': 'fonts/Anton.ttf',
+        'Montserrat': 'fonts/Montserrat.ttf',
+        'SpaceMono': 'fonts/SpaceMono.ttf',
     }
-    font_key = style.get('primary_font', style.get('main_font', style.get('top_font', 'Anton')))
-    return font_map.get(font_key, font_key)
+    path = font_map.get(font_name, 'fonts/Anton.ttf')
+    # Make absolute path and escape for ffmpeg
+    abs_path = str(Path(path).absolute()).replace('\\', '/').replace(':', '\\:')
+    return abs_path
 
 
 def _hex_to_ass(hex_color):
-    """Convert #RRGGBB to ASS &H00BBGGRR format."""
     h = hex_color.lstrip('#')
     r, g, b = h[0:2], h[2:4], h[4:6]
     return f"&H00{b}{g}{r}"
+
+
+def _build_ffmpeg_filter(style, srt_path, scale=1.0, position='bottom'):
+    srt_escaped = srt_path.replace('\\', '/').replace(':', '\\:')
+
+    margin_map = {'bottom': 60, 'center': 0, 'top': 60}
+    alignment_map = {'bottom': 2, 'center': 5, 'top': 8}
+
+    margin_v = margin_map.get(position, 60)
+    alignment = alignment_map.get(position, 2)
+
+    line1 = style.get('line1', {})
+    font_path = _get_font_path(line1.get('font', 'Anton'))
+    font_size = int(line1.get('size', 60) * scale)
+    color = _hex_to_ass(line1.get('color', '#FFFFFF'))
+    bold = 1 if line1.get('bold', True) else 0
+    outline_color = '&H00000000'
+    outline = 2
+    shadow = 0
+
+    if line1.get('glow'):
+        outline_color = _hex_to_ass(line1.get('color', '#00FF44'))
+        outline = 3
+        shadow = 2
+
+    highlight = style.get('highlight', {})
+    if highlight:
+        outline_color = _hex_to_ass(highlight.get('bg', '#CC0000'))
+        outline = 8
+
+    force_style = (
+        f"FontName={line1.get('font', 'Anton')},"
+        f"FontSize={font_size},"
+        f"Bold={bold},"
+        f"PrimaryColour={color},"
+        f"OutlineColour={outline_color},"
+        f"Outline={outline},"
+        f"Shadow={shadow},"
+        f"Alignment={alignment},"
+        f"MarginV={margin_v}"
+    )
+
+    return f"subtitles='{srt_escaped}':force_style='{force_style}'"
 
 
 if __name__ == '__main__':
