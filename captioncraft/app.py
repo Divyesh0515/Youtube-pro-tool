@@ -26,67 +26,67 @@ client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', ''))
 
 STYLES = {
     'mehfil': {
-        'name': 'Mehfil', 'tag': 'CLEAN',
+        'name': 'Mehfil', 'tag': 'CLEAN', 'anim': 'slide_up',
         'line1': {'font': 'BebasNeue', 'color': '#00FF44', 'size': 72, 'bold': True, 'case': 'upper'},
         'line2': {'font': 'DancingScript', 'color': '#FF3DAD', 'size': 48, 'bold': False, 'case': 'lower'},
     },
     'hawabaaz': {
-        'name': 'Hawabaaz', 'tag': 'CLEAN',
+        'name': 'Hawabaaz', 'tag': 'CLEAN', 'anim': 'slide_up',
         'line1': {'font': 'BebasNeue', 'color': '#FFD700', 'size': 72, 'bold': True, 'case': 'upper'},
         'line2': {'font': 'DancingScript', 'color': '#FF3DAD', 'size': 48, 'bold': False, 'case': 'lower'},
     },
     'split_line': {
-        'name': 'Split Line', 'tag': 'CLEAN',
+        'name': 'Split Line', 'tag': 'CLEAN', 'anim': 'fade',
         'line1': {'font': 'Anton', 'color': '#FFD700', 'size': 64, 'bold': True, 'case': 'upper'},
         'line2': {'font': 'Montserrat', 'color': '#FFFFFF', 'size': 36, 'bold': False, 'case': 'lower'},
     },
     'hero_emphasis': {
-        'name': 'Hero Emphasis', 'tag': 'PREMIUM',
+        'name': 'Hero Emphasis', 'tag': 'PREMIUM', 'anim': 'pop',
         'line1': {'font': 'Montserrat', 'color': '#FFFFFF', 'size': 32, 'bold': False, 'case': 'title'},
         'line2': {'font': 'Anton', 'color': '#FF6A00', 'size': 80, 'bold': True, 'case': 'upper'},
     },
     'hero_glow': {
-        'name': 'Hero Glow', 'tag': 'PREMIUM',
+        'name': 'Hero Glow', 'tag': 'PREMIUM', 'anim': 'pop',
         'line1': {'font': 'Montserrat', 'color': '#FFFFFF', 'size': 32, 'bold': False, 'case': 'title'},
         'line2': {'font': 'Anton', 'color': '#00FF44', 'size': 80, 'bold': True, 'case': 'upper', 'glow': True},
     },
     'poetic_stack': {
-        'name': 'Poetic Stack', 'tag': 'BLUR-SLIDE',
+        'name': 'Poetic Stack', 'tag': 'BLUR-SLIDE', 'anim': 'blur_slide',
         'line1': {'font': 'Anton', 'color': '#FF3DAD', 'size': 60, 'bold': True, 'case': 'upper'},
         'line2': {'font': 'DancingScript', 'color': '#FFFFFF', 'size': 40, 'bold': False, 'case': 'lower'},
     },
     'box_highlight': {
-        'name': 'BOX-Highlight', 'tag': 'CLEAN',
+        'name': 'BOX-Highlight', 'tag': 'CLEAN', 'anim': 'pop',
         'line1': {'font': 'Anton', 'color': '#FFFFFF', 'size': 60, 'bold': True, 'case': 'upper'},
         'highlight': {'bg': '#8B5CF6', 'color': '#FFFFFF'},
     },
     'inline_emphasis': {
-        'name': 'Inline Emphasis', 'tag': 'CLEAN',
+        'name': 'Inline Emphasis', 'tag': 'CLEAN', 'anim': 'slide_up',
         'line1': {'font': 'Anton', 'color': '#FFFFFF', 'size': 60, 'bold': True, 'case': 'upper'},
         'highlight': {'bg': '#00FF44', 'color': '#000000'},
     },
     'neon_pop': {
-        'name': 'Neon Pop', 'tag': 'CLEAN',
+        'name': 'Neon Pop', 'tag': 'CLEAN', 'anim': 'pop',
         'line1': {'font': 'Anton', 'color': '#00FFFF', 'size': 64, 'bold': True, 'case': 'upper'},
         'line2': {'font': 'Anton', 'color': '#FFFFFF', 'size': 64, 'bold': True, 'case': 'upper'},
     },
     'bold_bounce': {
-        'name': 'Bold Bounce', 'tag': 'CLEAN',
+        'name': 'Bold Bounce', 'tag': 'CLEAN', 'anim': 'bounce',
         'line1': {'font': 'Anton', 'color': '#FFFFFF', 'size': 68, 'bold': True, 'case': 'upper'},
         'line2': {'font': 'Anton', 'color': '#BF5FFF', 'size': 68, 'bold': True, 'case': 'upper'},
     },
     'caption_joint': {
-        'name': 'Caption Joint', 'tag': 'CLEAN',
+        'name': 'Caption Joint', 'tag': 'CLEAN', 'anim': 'slide_up',
         'line1': {'font': 'Anton', 'color': '#FF3333', 'size': 68, 'bold': True, 'case': 'upper'},
         'line2': {'font': 'DancingScript', 'color': '#FFFFFF', 'size': 44, 'bold': False, 'case': 'lower'},
     },
     'mrbeast': {
-        'name': 'Mr Beast', 'tag': 'VIRAL',
+        'name': 'Mr Beast', 'tag': 'VIRAL', 'anim': 'pop',
         'line1': {'font': 'Anton', 'color': '#FFFFFF', 'size': 72, 'bold': True, 'case': 'upper'},
         'highlight': {'bg': '#CC0000', 'color': '#FFFFFF'},
     },
     'raw_archive': {
-        'name': 'Raw Archive', 'tag': 'CLEAN',
+        'name': 'Raw Archive', 'tag': 'CLEAN', 'anim': 'fade',
         'line1': {'font': 'SpaceMono', 'color': '#FFFFFF', 'size': 40, 'bold': False, 'case': 'none'},
     },
 }

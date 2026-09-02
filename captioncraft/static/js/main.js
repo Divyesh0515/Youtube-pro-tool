@@ -77,8 +77,8 @@ function initVideoPlayer(file) {
     updateProgress();
     drawCaptions();
   });
-  video.addEventListener('play',  () => { state.playing=true;  document.getElementById('btn-play').textContent='⏸'; });
-  video.addEventListener('pause', () => { state.playing=false; document.getElementById('btn-play').textContent='▶'; });
+  video.addEventListener('play',  () => { state.playing=true;  document.getElementById('btn-play').textContent='⏸'; startAnimLoop(); });
+  video.addEventListener('pause', () => { state.playing=false; document.getElementById('btn-play').textContent='▶'; stopAnimLoop(); drawCaptions(); });
   window.addEventListener('resize', resizeCanvas);
 }
 
@@ -205,25 +205,60 @@ function updateSizeScale(val) {
   drawCaptions();
 }
 
+/* ── ANIMATION STATE ── */
+const animState = { capId: null, startMs: 0, rafId: null };
+
+function startAnimLoop() {
+  if (animState.rafId) return;
+  function loop() {
+    drawCaptions();
+    animState.rafId = requestAnimationFrame(loop);
+  }
+  animState.rafId = requestAnimationFrame(loop);
+}
+function stopAnimLoop() {
+  if (animState.rafId) { cancelAnimationFrame(animState.rafId); animState.rafId = null; }
+}
+
 /* ── CANVAS CAPTION RENDERER ── */
 function drawCaptions() {
   const canvas = document.getElementById('caption-canvas');
-  const ctx    = canvas.getContext('2d');
-  const W      = canvas.width, H=canvas.height;
-  ctx.clearRect(0,0,W,H);
+  if (!canvas || canvas.style.display === 'none') return;
+  const ctx = canvas.getContext('2d');
+  const W   = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
   if (!state.captions.length) return;
 
   const t   = state.currentTime;
-  const cap = state.captions.find(c=>t>=c.start&&t<=c.end);
+  const cap = state.captions.find(c => t >= c.start && t <= c.end);
   if (!cap) return;
 
-  const style = STYLES[state.selectedStyle] || STYLES['mehfil'];
-  drawStyle(ctx, W, H, cap.text, style);
+  // Detect new caption → reset animation timer
+  if (cap._id !== animState.capId) {
+    animState.capId   = cap._id;
+    animState.startMs = performance.now();
+  }
+
+  const elapsed = performance.now() - animState.startMs; // ms since caption started
+  const style   = STYLES[state.selectedStyle] || STYLES['mehfil'];
+  drawStyle(ctx, W, H, cap.text, style, elapsed);
 }
 
-function drawStyle(ctx, W, H, text, style) {
+/* ── EASING ── */
+function easeOut(t) { return 1 - Math.pow(1-t, 3); }
+function easeOutBounce(t) {
+  if (t < 1/2.75) return 7.5625*t*t;
+  if (t < 2/2.75) { t -= 1.5/2.75; return 7.5625*t*t+0.75; }
+  if (t < 2.5/2.75) { t -= 2.25/2.75; return 7.5625*t*t+0.9375; }
+  t -= 2.625/2.75; return 7.5625*t*t+0.984375;
+}
+function easeOutBack(t) { const c1=1.70158,c3=c1+1; return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2); }
+
+function drawStyle(ctx, W, H, text, style, elapsed=999) {
   const scale = state.sizeScale;
   const pos   = state.position;
+  const anim  = style.anim || 'fade';
+  const DUR   = 300; // animation duration ms
 
   // Split text into 2 lines
   const words  = text.trim().split(/\s+/);
@@ -263,52 +298,89 @@ function drawStyle(ctx, W, H, text, style) {
   else if (pos==='top') baseY = 60;
   else baseY = (H-totalH)/2;
 
-  ctx.save();
-  ctx.textAlign='center';
+  // ── Animation transform ──
+  const t_anim = Math.min(elapsed / DUR, 1);
+  let offY1 = 0, offY2 = 0, scl1 = 1, scl2 = 1, alpha1 = 1, alpha2 = 1;
 
-  // Draw line1
-  ctx.font=`${l1cfg.bold?'900':'600'} ${l1size}px ${l1font}`;
-  ctx.fillStyle=l1cfg.color||'#00FF44';
+  if (anim === 'slide_up') {
+    const p = easeOut(t_anim);
+    offY1 = (1 - p) * l1size * 0.6;
+    offY2 = (1 - easeOut(Math.min((elapsed - 80) / DUR, 1))) * l2size * 0.6;
+    alpha1 = Math.min(elapsed / 150, 1);
+    alpha2 = Math.min(Math.max((elapsed - 80) / 150, 0), 1);
+  } else if (anim === 'pop') {
+    scl1  = easeOutBack(t_anim);
+    scl2  = easeOutBack(Math.min((elapsed - 80) / DUR, 1));
+    alpha1 = Math.min(elapsed / 120, 1);
+    alpha2 = Math.min(Math.max((elapsed - 80) / 120, 0), 1);
+  } else if (anim === 'bounce') {
+    offY1  = (1 - easeOutBounce(t_anim)) * (-l1size * 0.5);
+    offY2  = (1 - easeOutBounce(Math.min((elapsed - 100) / DUR, 1))) * (-l2size * 0.5);
+    alpha1 = Math.min(elapsed / 100, 1);
+    alpha2 = Math.min(Math.max((elapsed - 100) / 100, 0), 1);
+  } else if (anim === 'blur_slide') {
+    const p = easeOut(t_anim);
+    offY1  = (1 - p) * l1size * 0.4;
+    offY2  = (1 - easeOut(Math.min((elapsed - 100) / DUR, 1))) * l2size * 0.4;
+    alpha1 = Math.min(elapsed / 200, 1);
+    alpha2 = Math.min(Math.max((elapsed - 100) / 200, 0), 1);
+  } else { // fade
+    alpha1 = Math.min(elapsed / 250, 1);
+    alpha2 = Math.min(Math.max((elapsed - 100) / 250, 0), 1);
+  }
+
+  ctx.save();
+  ctx.textAlign = 'center';
+  const hl = style.highlight;
+
+  // ── Draw line1 ──
+  ctx.globalAlpha = alpha1;
+  ctx.font = `${l1cfg.bold?'900':'600'} ${l1size}px ${l1font}`;
 
   if (l1cfg.glow) {
     ctx.shadowColor = l1cfg.color || '#00FF44';
-    ctx.shadowBlur  = 30 * scale;
-    // draw multiple times for strong glow
-    for (let g = 0; g < 3; g++) ctx.fillText(t1, W/2, baseY);
+    ctx.shadowBlur  = 28 * scale;
   } else {
     ctx.shadowColor   = 'rgba(0,0,0,0.9)';
     ctx.shadowBlur    = 10;
     ctx.shadowOffsetY = 4;
   }
 
-  // Highlight box for mrbeast/box_highlight/inline_emphasis
-  const hl = style.highlight;
   if (hl && t1) {
-    const tw = ctx.measureText(t1).width;
-    const pad = 12;
-    ctx.fillStyle=hl.bg||'#CC0000';
-    ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+    ctx.save();
+    if (scl1 !== 1) { ctx.translate(W/2, baseY + offY1); ctx.scale(scl1, scl1); ctx.translate(-W/2, -(baseY + offY1)); }
+    const tw  = ctx.measureText(t1).width;
+    const pad = 14;
+    ctx.fillStyle = hl.bg || '#CC0000';
+    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
     ctx.beginPath();
-    roundRect(ctx, W/2-tw/2-pad, baseY-l1size+4, tw+pad*2, l1size+8, 8);
+    roundRect(ctx, W/2-tw/2-pad, baseY+offY1-l1size+4, tw+pad*2, l1size+10, 8);
     ctx.fill();
-    ctx.fillStyle=hl.color||'#FFFFFF';
-    ctx.shadowColor='rgba(0,0,0,0.5)';
-    ctx.shadowBlur=4;
+    ctx.fillStyle = hl.color || '#FFFFFF';
+    ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 4;
+    ctx.fillText(t1, W/2, baseY + offY1);
+    ctx.restore();
   } else {
-    ctx.fillStyle = l1cfg._color||l1cfg.color||'#00FF44';
+    ctx.fillStyle = l1cfg._color || l1cfg.color || '#00FF44';
+    ctx.save();
+    if (scl1 !== 1) { ctx.translate(W/2, baseY + offY1); ctx.scale(scl1, scl1); ctx.translate(-W/2, -(baseY + offY1)); }
+    if (l1cfg.glow) { for (let g=0;g<3;g++) ctx.fillText(t1, W/2, baseY + offY1); }
+    else ctx.fillText(t1, W/2, baseY + offY1);
+    ctx.restore();
   }
 
-  ctx.fillText(t1, W/2, baseY);
-
-  // Draw line2
+  // ── Draw line2 ──
   if (t2) {
-    ctx.shadowBlur=0; ctx.shadowOffsetY=0; ctx.shadowColor='transparent';
-    ctx.font=`${l2cfg.bold?'700':'600'} ${l2size}px ${l2font}`;
-    ctx.fillStyle = l2cfg._color||l2cfg.color||'#FF3DAD';
-    ctx.shadowColor='rgba(0,0,0,0.8)';
-    ctx.shadowBlur=6;
-    ctx.shadowOffsetY=2;
-    ctx.fillText(t2, W/2, baseY+l2size+12);
+    ctx.globalAlpha   = alpha2;
+    ctx.shadowBlur    = 0; ctx.shadowOffsetY = 0; ctx.shadowColor = 'transparent';
+    ctx.font          = `${l2cfg.bold?'700':'600'} ${l2size}px ${l2font}`;
+    ctx.fillStyle     = l2cfg._color || l2cfg.color || '#FF3DAD';
+    ctx.shadowColor   = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2;
+    const y2 = baseY + l2size + 14;
+    ctx.save();
+    if (scl2 !== 1) { ctx.translate(W/2, y2 + offY2); ctx.scale(scl2, scl2); ctx.translate(-W/2, -(y2 + offY2)); }
+    ctx.fillText(t2, W/2, y2 + offY2);
+    ctx.restore();
   }
 
   ctx.restore();

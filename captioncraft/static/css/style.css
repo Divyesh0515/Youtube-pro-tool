@@ -41,7 +41,7 @@ body{background:var(--bg);color:var(--text);font-family:'Montserrat',sans-serif;
 .style-list::-webkit-scrollbar{width:3px}
 .style-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 
-.style-card{border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s,box-shadow .2s;background:var(--surface2)}
+.style-card{border:1px solid var(--border);border-radius:12px;overflow:visible;cursor:pointer;transition:border-color .2s,transform .15s,box-shadow .2s;background:var(--surface2);clip-path:inset(0 round 12px)}
 .style-card:hover{border-color:var(--accent3);transform:translateY(-2px);box-shadow:0 6px 24px rgba(191,95,255,.15)}
 .style-card.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 4px 20px rgba(0,255,136,.12)}
 .style-thumb{position:relative;background:#000;aspect-ratio:16/7;overflow:hidden}
