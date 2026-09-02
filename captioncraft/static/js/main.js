@@ -285,10 +285,10 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
   const l1cfg = style.line1 || {};
   const l2cfg = style.line2 || l1cfg;
 
-  // Use shorter dimension so text doesn't overflow on landscape videos
+  // Scale font by shorter dimension; /1000 keeps sizes sane on HD video
   const baseDim = Math.min(W, H);
-  const l1size = Math.floor((l1cfg._size||l1cfg.size||60)*scale*(baseDim/500));
-  const l2size = Math.floor((l2cfg._size||l2cfg.size||40)*scale*(baseDim/500));
+  let l1size = Math.floor((l1cfg._size||l1cfg.size||60)*scale*(baseDim/1000));
+  let l2size = Math.floor((l2cfg._size||l2cfg.size||40)*scale*(baseDim/1000));
 
   const l1font = state.customFont1 ? (FONT_MAP[state.customFont1]||"'Anton'") : (FONT_MAP[l1cfg.font]||"'Anton'");
   const l2font = state.customFont2 ? (FONT_MAP[state.customFont2]||"'Dancing Script'") : (FONT_MAP[l2cfg.font]||"'Dancing Script'");
@@ -306,6 +306,18 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
 
   const t1 = applyCase(line1, state.customCase1||l1cfg.case||'upper');
   const t2 = line2 ? applyCase(line2, state.customCase2||l2cfg.case||'lower') : '';
+
+  // Auto-shrink: reduce font size until text fits within 90% canvas width
+  const maxW = W * 0.90;
+  const _tmpCtx = ctx;
+  (function shrinkFit() {
+    _tmpCtx.font = `${l1cfg.bold?'900':'700'} ${l1size}px ${l1font}`;
+    while (l1size > 18 && _tmpCtx.measureText(t1).width > maxW) l1size = Math.floor(l1size * 0.93);
+    if (t2) {
+      _tmpCtx.font = `${l2cfg.bold?'700':'600'} ${l2size}px ${l2font}`;
+      while (l2size > 14 && _tmpCtx.measureText(t2).width > maxW) l2size = Math.floor(l2size * 0.93);
+    }
+  })();
 
   // Y position (baseY = bottom of line1 text)
   let baseY;
@@ -520,8 +532,8 @@ function drawAllThumbs() {
     const l2 = style.line2 || {};
     const hl = style.highlight;
 
-    const l1size = Math.floor((l1.size || 60) * (H / 160));
-    const l2size = Math.floor((l2.size || 40) * (H / 190));
+    let l1size = Math.floor((l1.size || 60) * (H / 160));
+    let l2size = Math.floor((l2.size || 40) * (H / 190));
     const l1font = FONT_MAP[l1.font] || "'Anton'";
     const l2font = FONT_MAP[l2.font] || "'Dancing Script'";
     const strokeW = Math.max(1.5, W / 200);
