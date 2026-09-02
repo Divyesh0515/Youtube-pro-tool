@@ -134,3 +134,6 @@ body{background:var(--bg);color:var(--text);font-family:'Montserrat',sans-serif;
 .export-progress-line{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
 
 .count-badge{background:var(--accent);color:#000;font-size:.6rem;font-weight:700;padding:1px 7px;border-radius:10px;margin-left:.4rem}
+
+.font-select{background:var(--surface3);border:1px solid var(--border);color:var(--text);font-family:'Montserrat',sans-serif;font-size:.7rem;padding:3px 6px;border-radius:5px;cursor:pointer;outline:none}
+.font-select:focus{border-color:var(--accent3)}

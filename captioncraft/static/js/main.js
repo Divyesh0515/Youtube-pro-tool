@@ -5,6 +5,7 @@ const state = {
   selectedStyle: 'mehfil',
   sizeScale: 1.0, position: 'bottom',
   playing: false, duration: 0, currentTime: 0,
+  customFont1: '', customFont2: '',
 };
 
 /* ── FONT MAP (canvas) ── */
@@ -81,8 +82,27 @@ function initVideoPlayer(file) {
 function resizeCanvas() {
   const video  = document.getElementById('main-video');
   const canvas = document.getElementById('caption-canvas');
-  canvas.width  = video.videoWidth  || video.clientWidth;
-  canvas.height = video.videoHeight || video.clientHeight;
+  const wrap   = document.getElementById('preview-wrap');
+  const vW = video.videoWidth  || 1280;
+  const vH = video.videoHeight || 720;
+  const cW = wrap.clientWidth;
+  const cH = wrap.clientHeight;
+  const videoRatio     = vW / vH;
+  const containerRatio = cW / cH;
+  let rendW, rendH, offX, offY;
+  if (videoRatio > containerRatio) {
+    rendW = cW; rendH = cW / videoRatio;
+    offX = 0;   offY  = (cH - rendH) / 2;
+  } else {
+    rendH = cH; rendW = cH * videoRatio;
+    offY  = 0;  offX  = (cW - rendW) / 2;
+  }
+  canvas.style.left   = offX + 'px';
+  canvas.style.top    = offY + 'px';
+  canvas.style.width  = rendW + 'px';
+  canvas.style.height = rendH + 'px';
+  canvas.width  = vW;
+  canvas.height = vH;
 }
 
 /* ── VIDEO CONTROLS ── */
@@ -235,8 +255,8 @@ function drawStyle(ctx, W, H, text, style) {
   const l1size = Math.floor((l1cfg.size||60)*scale*(W/500));
   const l2size = Math.floor((l2cfg.size||40)*scale*(W/500));
 
-  const l1font = FONT_MAP[l1cfg.font]||"'Anton'";
-  const l2font = FONT_MAP[l2cfg.font]||"'Dancing Script'";
+  const l1font = state.customFont1 ? FONT_MAP[state.customFont1]||"'Anton'" : FONT_MAP[l1cfg.font]||"'Anton'";
+  const l2font = state.customFont2 ? FONT_MAP[state.customFont2]||"'Dancing Script'" : FONT_MAP[l2cfg.font]||"'Dancing Script'";
 
   const applyCase = (str, c) => {
     if (c==='upper') return str.toUpperCase();
@@ -368,6 +388,10 @@ window.addEventListener('load', ()=>{
   // Wait for fonts
   document.fonts.ready.then(()=>{ drawAllThumbs(); });
 });
+
+/* ── FONT OVERRIDE ── */
+function changeFont1(val) { state.customFont1=val; drawCaptions(); }
+function changeFont2(val) { state.customFont2=val; drawCaptions(); }
 
 /* ── EXPORT ── */
 async function exportVideo() {
