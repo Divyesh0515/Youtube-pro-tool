@@ -1,129 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CaptionCraft</title>
-  <link rel="stylesheet" href="/static/css/style.css" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CaptionCraft v2</title>
+  <link rel="stylesheet" href="/static/css/style.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Dancing+Script:wght@600;700&family=Montserrat:wght@400;700&family=Space+Mono&family=Playfair+Display:wght@700&family=Caveat:wght@600&display=swap" rel="stylesheet"/>
 </head>
 <body>
 
-<header>
-  <div>
-    <div class="logo">CaptionCraft</div>
-    <div class="logo-sub">AI-Powered Caption Studio</div>
+<header class="topbar">
+  <div class="logo-wrap">
+    <span class="logo-text">CaptionCraft</span>
+    <span class="logo-v">v2</span>
   </div>
-  <div style="margin-left:auto;display:flex;align-items:center;gap:1rem;">
-    <span id="global-status" class="status-badge status-idle">
-      <span class="dot"></span> Ready
-    </span>
+  <div class="topbar-right">
+    <span id="global-status" class="status-pill idle"><span class="dot"></span>Ready</span>
+    <button class="btn btn-export-top" id="btn-export-top" disabled onclick="exportVideo()">🚀 Export</button>
   </div>
 </header>
 
-<div class="app-grid">
+<div class="workspace">
 
-  <!-- ── SIDEBAR ── -->
-  <aside class="sidebar">
+  <!-- LEFT: Style Panel -->
+  <aside class="panel-left">
+    <div class="section-title">Templates</div>
 
-    <!-- Upload -->
-    <div class="panel">
-      <div class="panel-title">▶ Video Source</div>
-      <div id="drop-zone">
-        <span class="upload-icon">🎬</span>
-        <p><strong>Drop video here</strong> or click to browse</p>
-        <p style="margin-top:4px;">MP4 · MOV · AVI · MKV</p>
-        <input type="file" id="file-input" accept=".mp4,.mov,.avi,.mkv" />
-      </div>
-      <div class="file-info" id="file-info"></div>
-      <div class="progress-bar" id="upload-progress">
-        <div class="progress-fill" id="upload-fill"></div>
-      </div>
-    </div>
-
-    <!-- Video preview -->
-    <div class="video-preview" id="video-preview-wrap">
-      <video id="video-preview" controls></video>
-    </div>
-
-    <!-- Style selector -->
-    <div class="panel">
-      <div class="panel-title">🎨 Caption Style</div>
-      <div class="style-grid" id="style-grid">
-        {% for key, name in styles.items() %}
-        <button class="style-btn{% if key == 'mrbeast' %} active{% endif %}"
-                data-style="{{ key }}"
-                onclick="selectStyle(this)">
-          {{ name }}
-        </button>
-        {% endfor %}
-      </div>
-    </div>
-
-    <!-- Transcribe -->
-    <div class="panel">
-      <div class="panel-title">🎙 Transcription</div>
-      <button class="btn btn-primary btn-full" id="btn-transcribe" disabled onclick="transcribeVideo()">
-        Auto Transcribe
-      </button>
-      <div class="progress-bar" id="transcribe-progress" style="margin-top:0.8rem;">
-        <div class="progress-fill"></div>
-      </div>
-      <p style="font-size:0.75rem;color:var(--text-dim);margin-top:0.8rem;line-height:1.5;">
-        Uses OpenAI Whisper API. Requires <code style="color:var(--accent3)">OPENAI_API_KEY</code> env var.
-      </p>
-    </div>
-
-  </aside>
-
-  <!-- ── MAIN ── -->
-  <main class="main-area">
-
-    <!-- Timeline -->
-    <div class="timeline-wrapper">
-      <div class="timeline-header">
-        <div class="timeline-title">Caption Timeline</div>
-        <div class="timeline-actions">
-          <span id="cap-count" class="count-badge" style="display:none;">0</span>
-          <button class="btn btn-secondary" id="btn-add-cap" onclick="addCaption()" style="display:none;padding:0.4rem 0.8rem;font-size:0.75rem;">
-            + Add
-          </button>
-          <button class="btn btn-secondary" id="btn-clear-caps" onclick="clearCaptions()" style="display:none;padding:0.4rem 0.8rem;font-size:0.75rem;">
-            Clear All
-          </button>
+    <div class="style-list" id="style-list">
+      {% for key, s in styles.items() %}
+      <div class="style-card {% if key == 'mehfil' %}active{% endif %}" data-style="{{ key }}" onclick="selectStyle('{{ key }}', this)">
+        <div class="style-thumb" id="thumb-{{ key }}">
+          <canvas class="thumb-canvas" width="260" height="90" id="canvas-thumb-{{ key }}"></canvas>
+        </div>
+        <div class="style-card-footer">
+          <span class="style-name">{{ s.name }}</span>
+          <span class="style-tag tag-{{ s.tag|lower|replace('-','') }}">{{ s.tag }}</span>
         </div>
       </div>
+      {% endfor %}
+    </div>
+  </aside>
 
-      <div id="empty-state" class="empty-state">
-        <div class="empty-icon">🎞️</div>
-        <p>Upload a video and click <strong style="color:var(--accent)">Auto Transcribe</strong><br>
-           to generate captions, or add them manually.</p>
+  <!-- CENTER: Video Preview -->
+  <main class="panel-center">
+    <div class="preview-wrap" id="preview-wrap">
+      <div class="drop-overlay" id="drop-overlay">
+        <div class="drop-icon">🎬</div>
+        <div class="drop-text"><strong>Drop video here</strong> or click to browse</div>
+        <div class="drop-sub">MP4 · MOV · AVI · MKV</div>
+        <input type="file" id="file-input" accept=".mp4,.mov,.avi,.mkv"/>
       </div>
-
-      <div class="caption-list" id="caption-list" style="display:none;"></div>
+      <video id="main-video" style="display:none;" playsinline></video>
+      <canvas id="caption-canvas" style="display:none;"></canvas>
     </div>
 
-    <!-- Export bar -->
-    <div class="export-section">
-      <div style="display:flex;gap:1rem;align-items:center;">
-        <button class="btn btn-export" id="btn-export" disabled onclick="exportVideo()" style="width:auto;padding:0.8rem 2rem;">
-          🚀 Export with Captions
-        </button>
-        <div id="export-status" style="font-size:0.82rem;color:var(--text-dim);"></div>
-        <a id="download-link" style="display:none;" class="btn btn-primary">
-          ⬇ Download MP4
-        </a>
+    <!-- Video controls -->
+    <div class="video-controls" id="video-controls" style="display:none;">
+      <button class="ctrl-btn" onclick="togglePlay()" id="btn-play">▶</button>
+      <div class="progress-track" id="progress-track" onclick="seekVideo(event)">
+        <div class="progress-bar-fill" id="progress-fill"></div>
       </div>
-      <div class="progress-bar" id="export-progress" style="margin-top:0.8rem;">
-        <div class="progress-fill"></div>
-      </div>
+      <span class="time-display" id="time-display">0:00 / 0:00</span>
+      <button class="ctrl-btn" onclick="toggleMute()">🔊</button>
     </div>
 
+    <!-- Size & Position controls -->
+    <div class="adjust-bar" id="adjust-bar" style="display:none;">
+      <div class="adjust-group">
+        <label>Size</label>
+        <input type="range" min="50" max="200" value="100" id="size-slider" oninput="updateSizeScale(this.value)"/>
+        <span id="size-val">100%</span>
+      </div>
+      <div class="adjust-group">
+        <label>Position</label>
+        <div class="pos-btns">
+          <button class="pos-btn" onclick="setPosition('top', this)">Top</button>
+          <button class="pos-btn active" onclick="setPosition('bottom', this)">Bottom</button>
+          <button class="pos-btn" onclick="setPosition('center', this)">Center</button>
+        </div>
+      </div>
+    </div>
   </main>
+
+  <!-- RIGHT: Captions Panel -->
+  <aside class="panel-right">
+    <div class="section-title">
+      Captions
+      <span id="word-count" class="count-badge" style="display:none;"></span>
+    </div>
+
+    <div class="transcribe-wrap">
+      <button class="btn btn-transcribe" id="btn-transcribe" disabled onclick="transcribeVideo()">
+        🎙 Auto Transcribe
+      </button>
+      <div class="progress-line" id="t-progress" style="display:none;"><div class="progress-line-fill"></div></div>
+    </div>
+
+    <div id="empty-captions" class="empty-state">
+      <div class="empty-icon">🎞️</div>
+      <p>Upload a video then click<br/><strong>Auto Transcribe</strong></p>
+    </div>
+
+    <div id="caption-editor" style="display:none; flex:1; overflow:hidden; display:none; flex-direction:column;">
+      <div class="cap-actions">
+        <button class="cap-act-btn" onclick="addCaption()">+ Add</button>
+        <button class="cap-act-btn danger" onclick="clearCaptions()">Clear</button>
+      </div>
+      <div class="caption-scroll" id="caption-scroll"></div>
+    </div>
+
+    <div class="export-footer">
+      <button class="btn btn-export-full" id="btn-export-full" disabled onclick="exportVideo()">🚀 Export with Captions</button>
+      <div class="export-progress-line" id="e-progress" style="display:none;"><div class="progress-line-fill"></div></div>
+      <div id="export-msg" class="export-msg"></div>
+      <a id="download-link" class="btn btn-download" style="display:none;">⬇ Download MP4</a>
+    </div>
+  </aside>
+
 </div>
 
-<!-- Toasts -->
-<div class="toast-container" id="toast-container"></div>
-
+<script>
+  const STYLES = {{ styles | tojson }};
+</script>
 <script src="/static/js/main.js"></script>
 </body>
 </html>
