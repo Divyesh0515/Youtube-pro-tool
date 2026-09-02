@@ -352,27 +352,40 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
   const strokeW = Math.max(2, baseDim / 300); // crisp outline thickness scales with resolution
   const glowOverride = state.glowStrength > 0;
 
-  // helper: draw text with stroke outline for premium look
-  function drawTextPremium(txt, x, y, fillColor, isGlow, glowColor, isBold) {
+  // helper: make a lighter version of hex color for gradient top
+  function lightenHex(hex, amt=0.55) {
+    const h=hex.replace('#','');
+    const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16);
+    const lr=Math.round(r+(255-r)*amt), lg=Math.round(g+(255-g)*amt), lb=Math.round(b+(255-b)*amt);
+    return `rgb(${lr},${lg},${lb})`;
+  }
+
+  // helper: draw text with stroke outline + vertical gradient for premium look
+  function drawTextPremium(txt, x, y, fillColor, isGlow, glowColor, isBold, fontSize) {
+    const sz = fontSize || l1size;
+    // Build vertical gradient: lighter top → original color bottom
+    const grad = ctx.createLinearGradient(0, y - sz, 0, y + sz * 0.1);
+    grad.addColorStop(0, lightenHex(fillColor.replace(/^rgba?\(.*\)$/, '#FFFFFF'), 0.5));
+    grad.addColorStop(0.5, fillColor);
+    grad.addColorStop(1, fillColor);
+
     if (isGlow || glowOverride) {
       const gc = glowColor || fillColor;
       const gb = glowOverride ? state.glowStrength * (baseDim/500) : 28 * scale;
       ctx.shadowColor = gc; ctx.shadowBlur = gb; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
-      ctx.fillStyle = fillColor;
+      ctx.fillStyle = grad;
       for (let g=0;g<3;g++) ctx.fillText(txt, x, y);
       ctx.shadowBlur = 0;
     } else {
-      // Drop shadow
-      ctx.shadowColor = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = Math.ceil(strokeW*1.5); ctx.shadowOffsetX = 0;
-      ctx.fillStyle = fillColor;
-      ctx.fillText(txt, x, y);
-      ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
-      // Stroke outline
-      ctx.strokeStyle = 'rgba(0,0,0,0.9)';
-      ctx.lineWidth   = strokeW * 2;
+      // Stroke first (behind) for clean outline
+      ctx.strokeStyle = 'rgba(0,0,0,0.88)';
+      ctx.lineWidth   = strokeW * 2.2;
       ctx.lineJoin    = 'round';
+      ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 12; ctx.shadowOffsetY = Math.ceil(strokeW*1.8); ctx.shadowOffsetX = 0;
       ctx.strokeText(txt, x, y);
-      ctx.fillStyle = fillColor;
+      ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+      // Fill with gradient on top
+      ctx.fillStyle = grad;
       ctx.fillText(txt, x, y);
     }
   }
@@ -404,7 +417,7 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
       drawLineWithHighlight(ctx, line1w.map(w=>applyCase(w, state.customCase1||l1cfg.case||'upper')), activeWord, W/2, baseY+offY1, l1size, state.highlightColor, l1baseColor, l1font, l1cfg.bold, scale);
       ctx.textAlign = 'center';
     } else {
-      drawTextPremium(t1, W/2, baseY+offY1, l1baseColor, l1cfg.glow, l1cfg.color, l1cfg.bold);
+      drawTextPremium(t1, W/2, baseY+offY1, l1baseColor, l1cfg.glow, l1cfg.color, l1cfg.bold, l1size);
     }
     ctx.restore();
   }
@@ -422,7 +435,7 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
       drawLineWithHighlight(ctx, line2w.map(w=>applyCase(w, state.customCase2||l2cfg.case||'lower')), activeWord, W/2, y2+offY2, l2size, state.highlightColor, l2baseColor, l2font, l2cfg.bold, scale);
       ctx.textAlign = 'center';
     } else {
-      drawTextPremium(t2, W/2, y2+offY2, l2baseColor, l2cfg.glow, l2cfg.color, l2cfg.bold);
+      drawTextPremium(t2, W/2, y2+offY2, l2baseColor, l2cfg.glow, l2cfg.color, l2cfg.bold, l2size);
     }
     ctx.restore();
   }
