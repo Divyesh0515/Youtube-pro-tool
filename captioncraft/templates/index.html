@@ -45,14 +45,16 @@
   <!-- CENTER: Video Preview -->
   <main class="panel-center">
     <div class="preview-wrap" id="preview-wrap">
-      <div class="drop-overlay" id="drop-overlay">
-        <div class="drop-icon">🎬</div>
-        <div class="drop-text"><strong>Drop video here</strong> or click to browse</div>
-        <div class="drop-sub">MP4 · MOV · AVI · MKV</div>
-        <input type="file" id="file-input" accept=".mp4,.mov,.avi,.mkv"/>
+      <div class="video-frame" id="video-frame">
+        <div class="drop-overlay" id="drop-overlay">
+          <div class="drop-icon">🎬</div>
+          <div class="drop-text"><strong>Drop video here</strong> or click to browse</div>
+          <div class="drop-sub">MP4 · MOV · AVI · MKV · 9:16</div>
+          <input type="file" id="file-input" accept=".mp4,.mov,.avi,.mkv"/>
+        </div>
+        <video id="main-video" style="display:none;" playsinline></video>
+        <canvas id="caption-canvas" style="display:none;"></canvas>
       </div>
-      <video id="main-video" style="display:none;" playsinline></video>
-      <canvas id="caption-canvas" style="display:none;"></canvas>
     </div>
 
     <!-- Video controls -->
