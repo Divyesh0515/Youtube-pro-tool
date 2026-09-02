@@ -6,7 +6,7 @@
   <title>CaptionCraft v2</title>
   <link rel="stylesheet" href="/static/css/style.css"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Dancing+Script:wght@600;700&family=Montserrat:wght@400;700&family=Space+Mono&family=Playfair+Display:wght@700&family=Caveat:wght@600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Dancing+Script:wght@600;700&family=Montserrat:wght@400;500;700&family=Space+Mono&family=Playfair+Display:wght@700&family=Caveat:wght@600&family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet"/>
 </head>
 <body>
 
@@ -14,6 +14,13 @@
   <div class="logo-wrap">
     <span class="logo-text">CaptionCraft</span>
     <span class="logo-v">v2</span>
+  </div>
+  <div class="topbar-center">
+    <div class="pos-btns">
+      <button class="pos-btn" onclick="setPosition('top',this)">Top</button>
+      <button class="pos-btn active" onclick="setPosition('bottom',this)">Bottom</button>
+      <button class="pos-btn" onclick="setPosition('center',this)">Center</button>
+    </div>
   </div>
   <div class="topbar-right">
     <span id="global-status" class="status-pill idle"><span class="dot"></span>Ready</span>
@@ -23,33 +30,36 @@
 
 <div class="workspace">
 
-  <!-- LEFT: Style Panel -->
+  <!-- LEFT: Templates -->
   <aside class="panel-left">
-    <div class="section-title">Templates</div>
-
+    <div class="panel-left-header">
+      <span class="panel-title">Templates</span>
+      <span class="template-count">{{ styles|length }} styles</span>
+    </div>
     <div class="style-list" id="style-list">
       {% for key, s in styles.items() %}
       <div class="style-card {% if key == 'mehfil' %}active{% endif %}" data-style="{{ key }}" onclick="selectStyle('{{ key }}', this)">
-        <div class="style-thumb" id="thumb-{{ key }}">
-          <canvas class="thumb-canvas" width="260" height="110" id="canvas-thumb-{{ key }}"></canvas>
+        <div class="style-thumb">
+          <span class="thumb-tag tag-{{ s.tag|lower|replace('-','') }}">{{ s.tag }}</span>
+          <canvas class="thumb-canvas" width="280" height="120" id="canvas-thumb-{{ key }}"></canvas>
         </div>
         <div class="style-card-footer">
           <span class="style-name">{{ s.name }}</span>
-          <span class="style-tag tag-{{ s.tag|lower|replace('-','') }}">{{ s.tag }}</span>
+          <button class="apply-btn" onclick="event.stopPropagation();selectStyle('{{ key }}',this.closest('.style-card'))">Apply</button>
         </div>
       </div>
       {% endfor %}
     </div>
   </aside>
 
-  <!-- CENTER: Video Preview -->
+  <!-- CENTER: Video -->
   <main class="panel-center">
     <div class="preview-wrap" id="preview-wrap">
       <div class="video-frame" id="video-frame">
         <div class="drop-overlay" id="drop-overlay">
           <div class="drop-icon">🎬</div>
           <div class="drop-text"><strong>Drop video here</strong> or click to browse</div>
-          <div class="drop-sub">MP4 · MOV · AVI · MKV · 9:16</div>
+          <div class="drop-sub">MP4 · MOV · AVI · MKV · 9:16 Reels</div>
           <input type="file" id="file-input" accept=".mp4,.mov,.avi,.mkv"/>
         </div>
         <video id="main-video" style="display:none;" playsinline></video>
@@ -57,88 +67,141 @@
       </div>
     </div>
 
-    <!-- Video controls -->
     <div class="video-controls" id="video-controls" style="display:none;">
       <button class="ctrl-btn" onclick="togglePlay()" id="btn-play">▶</button>
       <div class="progress-track" id="progress-track" onclick="seekVideo(event)">
         <div class="progress-bar-fill" id="progress-fill"></div>
       </div>
       <span class="time-display" id="time-display">0:00 / 0:00</span>
-      <button class="ctrl-btn" onclick="toggleMute()">🔊</button>
+      <button class="ctrl-btn" onclick="toggleMute()" id="btn-mute">🔊</button>
     </div>
 
-    <!-- Size & Position controls -->
     <div class="adjust-bar" id="adjust-bar" style="display:none;">
       <div class="adjust-group">
         <label>Size</label>
         <input type="range" min="50" max="200" value="100" id="size-slider" oninput="updateSizeScale(this.value)"/>
         <span id="size-val">100%</span>
       </div>
-      <div class="adjust-group">
-        <label>Position</label>
-        <div class="pos-btns">
-          <button class="pos-btn" onclick="setPosition('top', this)">Top</button>
-          <button class="pos-btn active" onclick="setPosition('bottom', this)">Bottom</button>
-          <button class="pos-btn" onclick="setPosition('center', this)">Center</button>
-        </div>
-      </div>
-      <div class="adjust-group">
-        <label>Line 1 Font</label>
-        <select class="font-select" onchange="changeFont1(this.value)">
-          <option value="">Auto</option>
-          <option value="Anton">Anton</option>
-          <option value="BebasNeue">Bebas Neue</option>
-          <option value="Montserrat">Montserrat</option>
-          <option value="SpaceMono">Space Mono</option>
-          <option value="PlayfairDisplay">Playfair Display</option>
-        </select>
-      </div>
-      <div class="adjust-group">
-        <label>Line 2 Font</label>
-        <select class="font-select" onchange="changeFont2(this.value)">
-          <option value="">Auto</option>
-          <option value="DancingScript">Dancing Script</option>
-          <option value="Caveat">Caveat</option>
-          <option value="Anton">Anton</option>
-          <option value="Montserrat">Montserrat</option>
-          <option value="PlayfairDisplay">Playfair Display</option>
-        </select>
-      </div>
     </div>
   </main>
 
-  <!-- RIGHT: Captions Panel -->
+  <!-- RIGHT: Captions + Styling -->
   <aside class="panel-right">
-    <div class="section-title">
-      Captions
-      <span id="word-count" class="count-badge" style="display:none;"></span>
+    <!-- Tabs -->
+    <div class="right-tabs">
+      <button class="rtab active" onclick="showTab('captions',this)">Captions</button>
+      <button class="rtab" onclick="showTab('styling',this)">Styling</button>
     </div>
 
-    <div class="transcribe-wrap">
-      <button class="btn btn-transcribe" id="btn-transcribe" disabled onclick="transcribeVideo()">
-        🎙 Auto Transcribe
-      </button>
-      <div class="progress-line" id="t-progress" style="display:none;"><div class="progress-line-fill"></div></div>
-    </div>
-
-    <div id="empty-captions" class="empty-state">
-      <div class="empty-icon">🎞️</div>
-      <p>Upload a video then click<br/><strong>Auto Transcribe</strong></p>
-    </div>
-
-    <div id="caption-editor" style="display:none; flex:1; overflow:hidden; display:none; flex-direction:column;">
-      <div class="cap-actions">
-        <button class="cap-act-btn" onclick="addCaption()">+ Add</button>
-        <button class="cap-act-btn danger" onclick="clearCaptions()">Clear</button>
+    <!-- CAPTIONS TAB -->
+    <div id="tab-captions" class="tab-content active">
+      <div class="transcribe-wrap">
+        <button class="btn-transcribe" id="btn-transcribe" disabled onclick="transcribeVideo()">
+          🎙 Auto Transcribe
+        </button>
+        <div class="progress-line" id="t-progress" style="display:none;"><div class="progress-line-fill"></div></div>
       </div>
-      <div class="caption-scroll" id="caption-scroll"></div>
+
+      <div id="empty-captions" class="empty-state">
+        <div class="empty-icon">🎞️</div>
+        <p>Upload a video then click<br/><strong>Auto Transcribe</strong></p>
+      </div>
+
+      <div id="caption-editor" style="display:none;flex:1;overflow:hidden;flex-direction:column;">
+        <div class="cap-actions">
+          <span class="cap-count" id="word-count"></span>
+          <div style="display:flex;gap:.4rem;margin-left:auto">
+            <button class="cap-act-btn" onclick="addCaption()">+ Add</button>
+            <button class="cap-act-btn danger" onclick="clearCaptions()">Clear</button>
+          </div>
+        </div>
+        <div class="caption-scroll" id="caption-scroll"></div>
+      </div>
+    </div>
+
+    <!-- STYLING TAB -->
+    <div id="tab-styling" class="tab-content">
+      <div class="styling-scroll">
+
+        <div class="style-section-label">Top Line</div>
+        <div class="style-row">
+          <label class="style-lbl">Font</label>
+          <select class="style-select" onchange="changeFont1(this.value)">
+            <option value="">Auto (style default)</option>
+            <option value="Anton">Anton</option>
+            <option value="BebasNeue">Bebas Neue</option>
+            <option value="Montserrat">Montserrat</option>
+            <option value="Poppins">Poppins</option>
+            <option value="SpaceMono">Space Mono</option>
+            <option value="PlayfairDisplay">Playfair Display</option>
+            <option value="DancingScript">Dancing Script</option>
+            <option value="Caveat">Caveat</option>
+          </select>
+        </div>
+        <div class="style-row">
+          <label class="style-lbl">Case</label>
+          <div class="case-btns">
+            <button class="case-btn active" onclick="setCase1('upper',this)">AA</button>
+            <button class="case-btn" onclick="setCase1('lower',this)">aa</button>
+            <button class="case-btn" onclick="setCase1('title',this)">Aa</button>
+            <button class="case-btn" onclick="setCase1('none',this)">—</button>
+          </div>
+        </div>
+        <div class="style-row">
+          <label class="style-lbl">Size</label>
+          <input type="range" min="20" max="120" value="72" class="style-range" id="l1-size" oninput="setLine1Size(this.value)"/>
+          <span class="style-range-val" id="l1-size-val">72px</span>
+        </div>
+        <div class="style-row">
+          <label class="style-lbl">Color</label>
+          <input type="color" value="#00FF44" id="l1-color" class="color-pick" oninput="setLine1Color(this.value)"/>
+          <span class="color-hex" id="l1-color-hex">#00FF44</span>
+        </div>
+
+        <div class="style-divider"></div>
+
+        <div class="style-section-label">Bottom Line</div>
+        <div class="style-row">
+          <label class="style-lbl">Font</label>
+          <select class="style-select" onchange="changeFont2(this.value)">
+            <option value="">Auto (style default)</option>
+            <option value="DancingScript">Dancing Script</option>
+            <option value="Caveat">Caveat</option>
+            <option value="Anton">Anton</option>
+            <option value="BebasNeue">Bebas Neue</option>
+            <option value="Montserrat">Montserrat</option>
+            <option value="Poppins">Poppins</option>
+            <option value="PlayfairDisplay">Playfair Display</option>
+          </select>
+        </div>
+        <div class="style-row">
+          <label class="style-lbl">Case</label>
+          <div class="case-btns">
+            <button class="case-btn" onclick="setCase2('upper',this)">AA</button>
+            <button class="case-btn active" onclick="setCase2('lower',this)">aa</button>
+            <button class="case-btn" onclick="setCase2('title',this)">Aa</button>
+            <button class="case-btn" onclick="setCase2('none',this)">—</button>
+          </div>
+        </div>
+        <div class="style-row">
+          <label class="style-lbl">Size</label>
+          <input type="range" min="16" max="90" value="48" class="style-range" id="l2-size" oninput="setLine2Size(this.value)"/>
+          <span class="style-range-val" id="l2-size-val">48px</span>
+        </div>
+        <div class="style-row">
+          <label class="style-lbl">Color</label>
+          <input type="color" value="#FF3DAD" id="l2-color" class="color-pick" oninput="setLine2Color(this.value)"/>
+          <span class="color-hex" id="l2-color-hex">#FF3DAD</span>
+        </div>
+
+      </div>
     </div>
 
     <div class="export-footer">
-      <button class="btn btn-export-full" id="btn-export-full" disabled onclick="exportVideo()">🚀 Export with Captions</button>
+      <button class="btn-export-full" id="btn-export-full" disabled onclick="exportVideo()">🚀 Export with Captions</button>
       <div class="export-progress-line" id="e-progress" style="display:none;"><div class="progress-line-fill"></div></div>
       <div id="export-msg" class="export-msg"></div>
-      <a id="download-link" class="btn btn-download" style="display:none;">⬇ Download MP4</a>
+      <a id="download-link" class="btn-download" style="display:none;">⬇ Download MP4</a>
     </div>
   </aside>
 

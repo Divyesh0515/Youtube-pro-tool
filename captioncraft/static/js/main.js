@@ -6,6 +6,9 @@ const state = {
   sizeScale: 1.0, position: 'bottom',
   playing: false, duration: 0, currentTime: 0,
   customFont1: '', customFont2: '',
+  customCase1: '', customCase2: '',
+  customSize1: 0, customSize2: 0,
+  customColor1: '', customColor2: '',
 };
 
 /* ── FONT MAP (canvas) ── */
@@ -233,11 +236,15 @@ function drawStyle(ctx, W, H, text, style) {
   const l1cfg = style.line1 || {};
   const l2cfg = style.line2 || l1cfg;
 
-  const l1size = Math.floor((l1cfg.size||60)*scale*(W/500));
-  const l2size = Math.floor((l2cfg.size||40)*scale*(W/500));
+  const l1size = Math.floor((l1cfg._size||l1cfg.size||60)*scale*(W/500));
+  const l2size = Math.floor((l2cfg._size||l2cfg.size||40)*scale*(W/500));
 
-  const l1font = state.customFont1 ? FONT_MAP[state.customFont1]||"'Anton'" : FONT_MAP[l1cfg.font]||"'Anton'";
-  const l2font = state.customFont2 ? FONT_MAP[state.customFont2]||"'Dancing Script'" : FONT_MAP[l2cfg.font]||"'Dancing Script'";
+  const l1font = state.customFont1 ? (FONT_MAP[state.customFont1]||"'Anton'") : (FONT_MAP[l1cfg.font]||"'Anton'");
+  const l2font = state.customFont2 ? (FONT_MAP[state.customFont2]||"'Dancing Script'") : (FONT_MAP[l2cfg.font]||"'Dancing Script'");
+  if (state.customSize1) l1cfg._size = state.customSize1;
+  if (state.customSize2) l2cfg._size = state.customSize2;
+  if (state.customColor1) l1cfg._color = state.customColor1;
+  if (state.customColor2) l2cfg._color = state.customColor2;
 
   const applyCase = (str, c) => {
     if (c==='upper') return str.toUpperCase();
@@ -246,8 +253,8 @@ function drawStyle(ctx, W, H, text, style) {
     return str;
   };
 
-  const t1 = applyCase(line1, l1cfg.case||'upper');
-  const t2 = line2 ? applyCase(line2, l2cfg.case||'lower') : '';
+  const t1 = applyCase(line1, state.customCase1||l1cfg.case||'upper');
+  const t2 = line2 ? applyCase(line2, state.customCase2||l2cfg.case||'lower') : '';
 
   // Y position
   let baseY;
@@ -288,7 +295,7 @@ function drawStyle(ctx, W, H, text, style) {
     ctx.shadowColor='rgba(0,0,0,0.5)';
     ctx.shadowBlur=4;
   } else {
-    ctx.fillStyle=l1cfg.color||'#00FF44';
+    ctx.fillStyle = l1cfg._color||l1cfg.color||'#00FF44';
   }
 
   ctx.fillText(t1, W/2, baseY);
@@ -297,7 +304,7 @@ function drawStyle(ctx, W, H, text, style) {
   if (t2) {
     ctx.shadowBlur=0; ctx.shadowOffsetY=0; ctx.shadowColor='transparent';
     ctx.font=`${l2cfg.bold?'700':'600'} ${l2size}px ${l2font}`;
-    ctx.fillStyle=l2cfg.color||'#FF3DAD';
+    ctx.fillStyle = l2cfg._color||l2cfg.color||'#FF3DAD';
     ctx.shadowColor='rgba(0,0,0,0.8)';
     ctx.shadowBlur=6;
     ctx.shadowOffsetY=2;
@@ -392,9 +399,22 @@ window.addEventListener('load', ()=>{
   document.fonts.ready.then(()=>{ drawAllThumbs(); });
 });
 
-/* ── FONT OVERRIDE ── */
+/* ── FONT / STYLE OVERRIDE ── */
 function changeFont1(val) { state.customFont1=val; drawCaptions(); }
 function changeFont2(val) { state.customFont2=val; drawCaptions(); }
+function setCase1(val,btn) { state.customCase1=val; document.querySelectorAll('.case-btns')[0].querySelectorAll('.case-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); drawCaptions(); }
+function setCase2(val,btn) { state.customCase2=val; document.querySelectorAll('.case-btns')[1].querySelectorAll('.case-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); drawCaptions(); }
+function setLine1Size(val) { state.customSize1=parseInt(val); document.getElementById('l1-size-val').textContent=val+'px'; drawCaptions(); }
+function setLine2Size(val) { state.customSize2=parseInt(val); document.getElementById('l2-size-val').textContent=val+'px'; drawCaptions(); }
+function setLine1Color(val) { state.customColor1=val; document.getElementById('l1-color-hex').textContent=val; drawCaptions(); }
+function setLine2Color(val) { state.customColor2=val; document.getElementById('l2-color-hex').textContent=val; drawCaptions(); }
+
+function showTab(name, btn) {
+  document.querySelectorAll('.rtab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
 
 /* ── EXPORT ── */
 async function exportVideo() {
