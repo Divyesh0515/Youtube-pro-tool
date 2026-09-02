@@ -9,6 +9,8 @@ const state = {
   customCase1: '', customCase2: '',
   customSize1: 0, customSize2: 0,
   customColor1: '', customColor2: '',
+  customAnim: '',   // override animation
+  animDur: 300,     // animation duration ms
 };
 
 /* ── FONT MAP (canvas) ── */
@@ -68,6 +70,11 @@ function initVideoPlayer(file) {
   video.src = URL.createObjectURL(file);
   video.addEventListener('loadedmetadata', () => {
     state.duration = video.duration;
+    const vw = video.videoWidth, vh = video.videoHeight;
+    if (vw && vh) {
+      const frame = document.getElementById('video-frame');
+      frame.style.aspectRatio = `${vw}/${vh}`;
+    }
     resizeCanvas();
     document.getElementById('video-controls').style.display='flex';
     document.getElementById('adjust-bar').style.display='flex';
@@ -257,8 +264,8 @@ function easeOutBack(t) { const c1=1.70158,c3=c1+1; return 1+c3*Math.pow(t-1,3)+
 function drawStyle(ctx, W, H, text, style, elapsed=999) {
   const scale = state.sizeScale;
   const pos   = state.position;
-  const anim  = style.anim || 'fade';
-  const DUR   = 300; // animation duration ms
+  const anim  = state.customAnim || style.anim || 'fade';
+  const DUR   = state.animDur || 300;
 
   // Split text into 2 lines
   const words  = text.trim().split(/\s+/);
@@ -375,11 +382,17 @@ function drawStyle(ctx, W, H, text, style, elapsed=999) {
     ctx.shadowBlur    = 0; ctx.shadowOffsetY = 0; ctx.shadowColor = 'transparent';
     ctx.font          = `${l2cfg.bold?'700':'600'} ${l2size}px ${l2font}`;
     ctx.fillStyle     = l2cfg._color || l2cfg.color || '#FF3DAD';
-    ctx.shadowColor   = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2;
     const y2 = baseY + l2size + 14;
+    if (l2cfg.glow) {
+      ctx.shadowColor = l2cfg.color || '#00FF44';
+      ctx.shadowBlur  = 28 * scale;
+    } else {
+      ctx.shadowColor   = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2;
+    }
     ctx.save();
     if (scl2 !== 1) { ctx.translate(W/2, y2 + offY2); ctx.scale(scl2, scl2); ctx.translate(-W/2, -(y2 + offY2)); }
-    ctx.fillText(t2, W/2, y2 + offY2);
+    if (l2cfg.glow) { for (let g=0;g<3;g++) ctx.fillText(t2, W/2, y2 + offY2); }
+    else ctx.fillText(t2, W/2, y2 + offY2);
     ctx.restore();
   }
 
@@ -480,6 +493,8 @@ function setLine1Size(val) { state.customSize1=parseInt(val); document.getElemen
 function setLine2Size(val) { state.customSize2=parseInt(val); document.getElementById('l2-size-val').textContent=val+'px'; drawCaptions(); }
 function setLine1Color(val) { state.customColor1=val; document.getElementById('l1-color-hex').textContent=val; drawCaptions(); }
 function setLine2Color(val) { state.customColor2=val; document.getElementById('l2-color-hex').textContent=val; drawCaptions(); }
+function setCustomAnim(val) { state.customAnim=val; drawCaptions(); }
+function setAnimDur(val) { state.animDur=parseInt(val); document.getElementById('anim-dur-val').textContent=val+'ms'; }
 
 function showTab(name, btn) {
   document.querySelectorAll('.rtab').forEach(b=>b.classList.remove('active'));

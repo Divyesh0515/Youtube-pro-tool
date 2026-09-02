@@ -160,6 +160,26 @@
 
         <div class="style-divider"></div>
 
+        <div class="style-section-label">Animation</div>
+        <div class="style-row">
+          <label class="style-lbl">Effect</label>
+          <select class="style-select" onchange="setCustomAnim(this.value)">
+            <option value="">Auto (style default)</option>
+            <option value="slide_up">Slide Up</option>
+            <option value="pop">Pop</option>
+            <option value="bounce">Bounce</option>
+            <option value="blur_slide">Blur Slide</option>
+            <option value="fade">Fade</option>
+          </select>
+        </div>
+        <div class="style-row">
+          <label class="style-lbl">Duration</label>
+          <input type="range" min="100" max="800" value="300" class="style-range" id="anim-dur" oninput="setAnimDur(this.value)"/>
+          <span class="style-range-val" id="anim-dur-val">300ms</span>
+        </div>
+
+        <div class="style-divider"></div>
+
         <div class="style-section-label">Bottom Line</div>
         <div class="style-row">
           <label class="style-lbl">Font</label>
