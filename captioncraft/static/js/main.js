@@ -513,8 +513,7 @@ function drawAllThumbs() {
     const bg = ctx.createLinearGradient(0, 0, 0, H);
     bg.addColorStop(0, '#0a0a14');
     bg.addColorStop(1, '#12121e');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
 
     const style = STYLES[key];
     const l1 = style.line1 || {};
@@ -525,44 +524,69 @@ function drawAllThumbs() {
     const l2size = Math.floor((l2.size || 40) * (H / 190));
     const l1font = FONT_MAP[l1.font] || "'Anton'";
     const l2font = FONT_MAP[l2.font] || "'Dancing Script'";
+    const strokeW = Math.max(1.5, W / 200);
 
     const t1 = 'CAPTION';
     const t2 = 'style preview';
     const hasLine2 = !!(l2.font || l2.color);
-    const totalH = hasLine2 ? l1size + l2size + 6 : l1size;
+    const totalH = hasLine2 ? l1size + l2size + 8 : l1size;
     const startY = (H + totalH) / 2 - (hasLine2 ? l2size + 4 : 0);
 
     ctx.textAlign = 'center';
-    ctx.font = `${l1.bold ? '900' : '600'} ${l1size}px ${l1font}`;
+
+    // helper: gradient fill for thumb
+    function thumbGrad(color, y, sz) {
+      const h = color.replace('#','');
+      const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
+      const lr=Math.round(r+(255-r)*0.55), lg=Math.round(g+(255-g)*0.55), lb=Math.round(b+(255-b)*0.55);
+      const grd = ctx.createLinearGradient(0, y-sz, 0, y+sz*0.1);
+      grd.addColorStop(0, `rgb(${lr},${lg},${lb})`);
+      grd.addColorStop(0.5, color);
+      grd.addColorStop(1, color);
+      return grd;
+    }
+
+    ctx.font = `${l1.bold ? '900' : '700'} ${l1size}px ${l1font}`;
 
     if (hl) {
       const tw = ctx.measureText(t1).width;
       const pad = 8;
-      ctx.fillStyle = hl.bg || '#CC0000';
-      ctx.shadowBlur = 0;
-      ctx.beginPath();
-      roundRect(ctx, W/2-tw/2-pad, startY-l1size+2, tw+pad*2, l1size+6, 6);
-      ctx.fill();
+      ctx.fillStyle = hl.bg || '#CC0000'; ctx.shadowBlur = 0;
+      ctx.beginPath(); roundRect(ctx, W/2-tw/2-pad, startY-l1size+2, tw+pad*2, l1size+6, 6); ctx.fill();
       ctx.fillStyle = hl.color || '#FFF';
       ctx.shadowColor = 'rgba(0,0,0,.4)'; ctx.shadowBlur = 3;
+      ctx.fillText(t1, W/2, startY);
+    } else if (l1.glow) {
+      ctx.shadowColor = l1.color||'#00FF44'; ctx.shadowBlur = 14;
+      ctx.fillStyle = thumbGrad(l1.color||'#00FF44', startY, l1size);
+      for(let g=0;g<2;g++) ctx.fillText(t1, W/2, startY);
+      ctx.shadowBlur = 0;
     } else {
-      ctx.fillStyle = l1.color || '#00FF44';
-      if (l1.glow) {
-        ctx.shadowColor = l1.color || '#00FF44';
-        ctx.shadowBlur = 12;
-        ctx.fillText(t1, W/2, startY);
-      } else {
-        ctx.shadowColor = 'rgba(0,0,0,.8)'; ctx.shadowBlur = 5; ctx.shadowOffsetY = 2;
-      }
+      // stroke then gradient fill
+      ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = strokeW*2; ctx.lineJoin = 'round';
+      ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2;
+      ctx.strokeText(t1, W/2, startY);
+      ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+      ctx.fillStyle = thumbGrad(l1.color||'#00FF44', startY, l1size);
+      ctx.fillText(t1, W/2, startY);
     }
-    ctx.fillText(t1, W/2, startY);
 
     if (hasLine2) {
-      ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; ctx.shadowColor = 'transparent';
       ctx.font = `${l2.bold ? '700' : '500'} ${l2size}px ${l2font}`;
-      ctx.fillStyle = l2.color || '#FF3DAD';
-      ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = 4;
-      ctx.fillText(t2, W/2, startY + l2size + 6);
+      const y2 = startY + l2size + 6;
+      if (l2.glow) {
+        ctx.shadowColor = l2.color||'#00FF44'; ctx.shadowBlur = 10;
+        ctx.fillStyle = thumbGrad(l2.color||'#00FF44', y2, l2size);
+        for(let g=0;g<2;g++) ctx.fillText(t2, W/2, y2);
+        ctx.shadowBlur = 0;
+      } else {
+        ctx.strokeStyle = 'rgba(0,0,0,0.75)'; ctx.lineWidth = strokeW*1.5; ctx.lineJoin='round';
+        ctx.shadowColor='rgba(0,0,0,0.6)'; ctx.shadowBlur=4; ctx.shadowOffsetY=1;
+        ctx.strokeText(t2, W/2, y2);
+        ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+        ctx.fillStyle = thumbGrad(l2.color||'#FF3DAD', y2, l2size);
+        ctx.fillText(t2, W/2, y2);
+      }
     }
   });
 }

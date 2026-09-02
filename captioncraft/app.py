@@ -89,6 +89,26 @@ STYLES = {
         'name': 'Raw Archive', 'tag': 'CLEAN', 'anim': 'fade',
         'line1': {'font': 'SpaceMono', 'color': '#FFFFFF', 'size': 40, 'bold': False, 'case': 'none'},
     },
+    'fire_drop': {
+        'name': 'Fire Drop', 'tag': 'VIRAL', 'anim': 'bounce',
+        'line1': {'font': 'Anton', 'color': '#FF6A00', 'size': 76, 'bold': True, 'case': 'upper'},
+        'line2': {'font': 'Anton', 'color': '#FFD700', 'size': 56, 'bold': True, 'case': 'upper'},
+    },
+    'ice_cold': {
+        'name': 'Ice Cold', 'tag': 'CLEAN', 'anim': 'slide_up',
+        'line1': {'font': 'Anton', 'color': '#00CFFF', 'size': 72, 'bold': True, 'case': 'upper'},
+        'line2': {'font': 'Montserrat', 'color': '#FFFFFF', 'size': 38, 'bold': False, 'case': 'title'},
+    },
+    'purple_rain': {
+        'name': 'Purple Rain', 'tag': 'PREMIUM', 'anim': 'pop',
+        'line1': {'font': 'Anton', 'color': '#BF5FFF', 'size': 74, 'bold': True, 'case': 'upper'},
+        'line2': {'font': 'DancingScript', 'color': '#FF3DAD', 'size': 46, 'bold': False, 'case': 'lower'},
+    },
+    'gold_rush': {
+        'name': 'Gold Rush', 'tag': 'VIRAL', 'anim': 'pop',
+        'line1': {'font': 'BebasNeue', 'color': '#FFD700', 'size': 80, 'bold': True, 'case': 'upper'},
+        'line2': {'font': 'Montserrat', 'color': '#FFFFFF', 'size': 36, 'bold': False, 'case': 'title'},
+    },
 }
 
 
