@@ -11,6 +11,8 @@ const state = {
   customColor1: '', customColor2: '',
   customAnim: '',   // override animation
   animDur: 300,     // animation duration ms
+  wordHighlight: true,  // karaoke word highlight
+  highlightColor: '#FFD700', // highlight color
 };
 
 /* ── FONT MAP (canvas) ── */
@@ -248,7 +250,11 @@ function drawCaptions() {
 
   const elapsed = performance.now() - animState.startMs; // ms since caption started
   const style   = STYLES[state.selectedStyle] || STYLES['mehfil'];
-  drawStyle(ctx, W, H, cap.text, style, elapsed);
+  // Find active word for karaoke highlight
+  const activeWord = state.wordHighlight && state.words.length
+    ? (state.words.find(w => t >= w.start && t <= w.end) || null)
+    : null;
+  drawStyle(ctx, W, H, cap.text, style, elapsed, activeWord);
 }
 
 /* ── EASING ── */
@@ -261,7 +267,7 @@ function easeOutBounce(t) {
 }
 function easeOutBack(t) { const c1=1.70158,c3=c1+1; return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2); }
 
-function drawStyle(ctx, W, H, text, style, elapsed=999) {
+function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
   const scale = state.sizeScale;
   const pos   = state.position;
   const anim  = state.customAnim || style.anim || 'fade';
@@ -368,11 +374,16 @@ function drawStyle(ctx, W, H, text, style, elapsed=999) {
     ctx.fillText(t1, W/2, baseY + offY1);
     ctx.restore();
   } else {
-    ctx.fillStyle = l1cfg._color || l1cfg.color || '#00FF44';
+    const l1baseColor = l1cfg._color || l1cfg.color || '#00FF44';
+    ctx.fillStyle = l1baseColor;
     ctx.save();
     if (scl1 !== 1) { ctx.translate(W/2, baseY + offY1); ctx.scale(scl1, scl1); ctx.translate(-W/2, -(baseY + offY1)); }
     if (l1cfg.glow) { for (let g=0;g<3;g++) ctx.fillText(t1, W/2, baseY + offY1); }
-    else ctx.fillText(t1, W/2, baseY + offY1);
+    else if (activeWord && !hl && line1w.length > 0) {
+      ctx.textAlign = 'left';
+      drawLineWithHighlight(ctx, line1w.map(w=>applyCase(w, state.customCase1||l1cfg.case||'upper')), activeWord, W/2, baseY + offY1, l1size, state.highlightColor, l1baseColor, l1font, l1cfg.bold, scale);
+      ctx.textAlign = 'center';
+    } else ctx.fillText(t1, W/2, baseY + offY1);
     ctx.restore();
   }
 
@@ -392,11 +403,60 @@ function drawStyle(ctx, W, H, text, style, elapsed=999) {
     ctx.save();
     if (scl2 !== 1) { ctx.translate(W/2, y2 + offY2); ctx.scale(scl2, scl2); ctx.translate(-W/2, -(y2 + offY2)); }
     if (l2cfg.glow) { for (let g=0;g<3;g++) ctx.fillText(t2, W/2, y2 + offY2); }
-    else ctx.fillText(t2, W/2, y2 + offY2);
+    else if (activeWord && line2w.length > 0) {
+      ctx.textAlign = 'left';
+      const l2baseColor = l2cfg._color || l2cfg.color || '#FF3DAD';
+      drawLineWithHighlight(ctx, line2w.map(w=>applyCase(w, state.customCase2||l2cfg.case||'lower')), activeWord, W/2, y2 + offY2, l2size, state.highlightColor, l2baseColor, l2font, l2cfg.bold, scale);
+      ctx.textAlign = 'center';
+    } else ctx.fillText(t2, W/2, y2 + offY2);
     ctx.restore();
   }
 
   ctx.restore();
+}
+
+// Draw text with one word highlighted (karaoke)
+function drawLineWithHighlight(ctx, words, activeWord, x, y, size, hlColor, baseColor, font, bold, scale) {
+  const activeNorm = activeWord ? activeWord.word.trim().toLowerCase().replace(/[^a-z0-9]/g,'') : '';
+  // Measure total width
+  ctx.font = `${bold?'900':'600'} ${size}px ${font}`;
+  const fullText = words.join(' ');
+  const totalW = ctx.measureText(fullText).width;
+  let curX = x - totalW / 2;
+
+  words.forEach((word, i) => {
+    const ww = ctx.measureText(word).width;
+    const spaceW = i < words.length-1 ? ctx.measureText(' ').width : 0;
+    const norm = word.toLowerCase().replace(/[^a-z0-9]/g,'');
+    const isActive = norm === activeNorm && activeNorm !== '';
+
+    if (isActive) {
+      // Draw highlight box
+      const pad = size * 0.1;
+      ctx.save();
+      ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+      ctx.fillStyle = hlColor;
+      ctx.beginPath();
+      roundRect(ctx, curX - pad, y - size + 2, ww + pad*2, size + 8, 5);
+      ctx.fill();
+      // Draw word in contrast color
+      const contrastColor = isLightColor(hlColor) ? '#000000' : '#FFFFFF';
+      ctx.fillStyle = contrastColor;
+      ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0;
+      ctx.fillText(word, curX + ww/2, y);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = baseColor;
+      ctx.fillText(word, curX + ww/2, y);
+    }
+    curX += ww + spaceW;
+  });
+}
+
+function isLightColor(hex) {
+  const h = hex.replace('#','');
+  const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+  return (r*299 + g*587 + b*114) / 1000 > 128;
 }
 
 function roundRect(ctx, x, y, w, h, r) {
@@ -495,6 +555,8 @@ function setLine1Color(val) { state.customColor1=val; document.getElementById('l
 function setLine2Color(val) { state.customColor2=val; document.getElementById('l2-color-hex').textContent=val; drawCaptions(); }
 function setCustomAnim(val) { state.customAnim=val; drawCaptions(); }
 function setAnimDur(val) { state.animDur=parseInt(val); document.getElementById('anim-dur-val').textContent=val+'ms'; }
+function toggleWordHighlight(el) { state.wordHighlight=el.checked; drawCaptions(); }
+function setHighlightColor(val) { state.highlightColor=val; document.getElementById('hl-color-hex').textContent=val; drawCaptions(); }
 
 function showTab(name, btn) {
   document.querySelectorAll('.rtab').forEach(b=>b.classList.remove('active'));
