@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import json
 import uuid
@@ -14,7 +15,8 @@ app.config['UPLOAD_FOLDER'] = Path('uploads')
 app.config['EXPORT_FOLDER'] = Path('exports')
 
 ALLOWED_EXTENSIONS = {'mp4', 'mov', 'avi', 'mkv'}
-client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
+_api_key = os.environ.get('OPENAI_API_KEY', '')
+client = OpenAI(api_key=_api_key.encode('ascii', errors='ignore').decode('ascii'))
 
 CAPTION_STYLES = {
     'mehfil': {
