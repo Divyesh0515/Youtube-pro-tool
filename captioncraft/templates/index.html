@@ -166,6 +166,27 @@
 
         <div class="style-divider"></div>
 
+        <div class="style-section-label">Caption Background</div>
+        <div class="style-row">
+          <label class="style-lbl">Enable</label>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="bg-toggle" onchange="toggleCaptionBg(this)"/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="style-row">
+          <label class="style-lbl">Color</label>
+          <input type="color" value="#000000" id="bg-color" class="color-pick" oninput="setCaptionBgColor(this.value)"/>
+          <span class="color-hex" id="bg-color-hex">#000000</span>
+        </div>
+        <div class="style-row">
+          <label class="style-lbl">Opacity</label>
+          <input type="range" min="0" max="100" value="55" class="style-range" id="bg-opacity" oninput="setCaptionBgOpacity(this.value)"/>
+          <span class="style-range-val" id="bg-opacity-val">55%</span>
+        </div>
+
+        <div class="style-divider"></div>
+
         <div class="style-section-label">Word Highlight</div>
         <div class="style-row">
           <label class="style-lbl">Karaoke</label>

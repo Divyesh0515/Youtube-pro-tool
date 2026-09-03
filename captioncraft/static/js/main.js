@@ -14,6 +14,10 @@ const state = {
   wordHighlight: true,  // karaoke word highlight
   highlightColor: '#FFD700', // highlight color
   glowStrength: 0,  // 0 = auto (style default), 1-40 = override
+  captionBg: false,         // semi-transparent background behind text block
+  captionBgColor: '#000000',
+  captionBgOpacity: 0.55,
+  captionBgPadding: 12,     // px padding around text block
 };
 
 /* ── FONT MAP (canvas) ── */
@@ -391,6 +395,31 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
   const strokeW = Math.max(2, baseDim / 300); // crisp outline thickness scales with resolution
   const glowOverride = state.glowStrength > 0;
 
+  // ── Caption Background ──
+  if (state.captionBg) {
+    const pad = state.captionBgPadding;
+    // Measure widths
+    ctx.font = `${l1cfg.bold?'900':'700'} ${l1size}px ${l1font}`;
+    const tw1 = ctx.measureText(t1).width;
+    const tw2 = t2 && l2cfg ? (() => { ctx.font = `${l2cfg && l2cfg.bold?'700':'600'} ${l2size}px ${l2font}`; return ctx.measureText(t2).width; })() : 0;
+    const maxTW = Math.max(tw1, tw2);
+    const blockTop = (pos === 'top') ? y1 - l1size - pad : (pos === 'center') ? y1 - l1size - pad : (t2 ? y2 - l2size - l1size - gap - pad : y1 - l1size - pad);
+    const blockH   = l1size + (t2 ? l2size + gap : 0) + pad * 2;
+    const blockX   = W/2 - maxTW/2 - pad;
+    const blockW   = maxTW + pad * 2;
+    const bgR = parseInt(state.captionBgColor.slice(1,3),16);
+    const bgG = parseInt(state.captionBgColor.slice(3,5),16);
+    const bgB = parseInt(state.captionBgColor.slice(5,7),16);
+    ctx.save();
+    ctx.globalAlpha = state.captionBgOpacity;
+    ctx.fillStyle = `rgb(${bgR},${bgG},${bgB})`;
+    ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+    ctx.beginPath();
+    roundRect(ctx, blockX, blockTop, blockW, blockH, 10);
+    ctx.fill();
+    ctx.restore();
+  }
+
   // helper: make a lighter version of hex color for gradient top
   function lightenHex(hex, amt=0.55) {
     const h=hex.replace('#','');
@@ -647,6 +676,9 @@ function setAnimDur(val) { state.animDur=parseInt(val); document.getElementById(
 function toggleWordHighlight(el) { state.wordHighlight=el.checked; drawCaptions(); }
 function setHighlightColor(val) { state.highlightColor=val; document.getElementById('hl-color-hex').textContent=val; drawCaptions(); }
 function setGlowStrength(val) { state.glowStrength=parseInt(val); document.getElementById('glow-val').textContent=val==0?'Off':val; drawCaptions(); }
+function toggleCaptionBg(el) { state.captionBg=el.checked; drawCaptions(); }
+function setCaptionBgColor(val) { state.captionBgColor=val; document.getElementById('bg-color-hex').textContent=val; drawCaptions(); }
+function setCaptionBgOpacity(val) { state.captionBgOpacity=val/100; document.getElementById('bg-opacity-val').textContent=val+'%'; drawCaptions(); }
 
 function showTab(name, btn) {
   document.querySelectorAll('.rtab').forEach(b=>b.classList.remove('active'));
