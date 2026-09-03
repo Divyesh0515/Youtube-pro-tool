@@ -6,7 +6,6 @@ def _patched_normalize(value, encoding):
 _httpx_utils.normalize_header_value = _patched_normalize
 
 import os
-import json
 import uuid
 import subprocess
 import tempfile
@@ -15,11 +14,17 @@ from flask import Flask, request, jsonify, render_template, send_file
 from openai import OpenAI
 from werkzeug.utils import secure_filename
 
+BASE_DIR = Path(__file__).parent.resolve()
+
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024
-app.config['UPLOAD_FOLDER'] = Path('uploads')
-app.config['EXPORT_FOLDER'] = Path('exports')
-app.config['FONTS_FOLDER'] = Path('fonts')
+app.config['UPLOAD_FOLDER'] = BASE_DIR / 'uploads'
+app.config['EXPORT_FOLDER'] = BASE_DIR / 'exports'
+app.config['FONTS_FOLDER'] = BASE_DIR / 'fonts'
+
+# Create required directories at startup regardless of how Flask is launched
+app.config['UPLOAD_FOLDER'].mkdir(exist_ok=True)
+app.config['EXPORT_FOLDER'].mkdir(exist_ok=True)
 
 ALLOWED_EXTENSIONS = {'mp4', 'mov', 'avi', 'mkv'}
 client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', ''))
@@ -144,11 +149,13 @@ def transcribe():
 
     audio_path = video_path.with_suffix('.mp3')
     try:
-        subprocess.run([
+        result = subprocess.run([
             'ffmpeg', '-i', str(video_path),
             '-vn', '-acodec', 'libmp3lame', '-ar', '16000', '-ac', '1', '-q:a', '5',
             str(audio_path), '-y'
-        ], check=True, capture_output=True)
+        ], capture_output=True, text=True)
+        if result.returncode != 0:
+            return jsonify({'error': f'Audio extraction failed: {result.stderr[-2000:]}'}), 500
 
         with open(audio_path, 'rb') as f:
             transcript = client.audio.transcriptions.create(
@@ -158,7 +165,6 @@ def transcribe():
                 timestamp_granularities=['word', 'segment']
             )
 
-        # Build word-level captions
         words = []
         if hasattr(transcript, 'words') and transcript.words:
             for w in transcript.words:
@@ -168,7 +174,6 @@ def transcribe():
                     'end': round(w.end, 3),
                 })
 
-        # Build segment captions
         captions = []
         for seg in transcript.segments:
             captions.append({
@@ -179,6 +184,8 @@ def transcribe():
             })
 
         return jsonify({'captions': captions, 'words': words})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     finally:
         if audio_path.exists():
             audio_path.unlink()
@@ -191,7 +198,9 @@ def export_video():
     captions = data.get('captions', [])
     style_key = data.get('style', 'mehfil')
     font_size_scale = float(data.get('font_size_scale', 1.0))
-    position = data.get('position', 'bottom')  # bottom / center / top
+    position = data.get('position', 'bottom')
+    # Custom overrides from frontend styling panel
+    custom = data.get('custom', {})
 
     if not video_path.exists():
         return jsonify({'error': 'Video not found'}), 404
@@ -199,17 +208,18 @@ def export_video():
     style = STYLES.get(style_key, STYLES['mehfil'])
     job_id = str(uuid.uuid4())
 
-    srt_path = Path(tempfile.mktemp(suffix='.srt'))
-    with open(srt_path, 'w', encoding='utf-8') as f:
+    # Use NamedTemporaryFile to avoid race condition
+    with tempfile.NamedTemporaryFile(suffix='.srt', delete=False, mode='w', encoding='utf-8') as tf:
+        srt_path = tf.name
         for i, cap in enumerate(captions, 1):
             start = _seconds_to_srt(cap['start'])
             end = _seconds_to_srt(cap['end'])
-            f.write(f"{i}\n{start} --> {end}\n{cap['text']}\n\n")
+            tf.write(f"{i}\n{start} --> {end}\n{cap['text']}\n\n")
 
     output_path = app.config['EXPORT_FOLDER'] / f"{job_id}_captioned.mp4"
 
     try:
-        filter_str = _build_ffmpeg_filter(style, str(srt_path), font_size_scale, position)
+        filter_str = _build_ffmpeg_filter(style, srt_path, font_size_scale, position, custom)
         cmd = [
             'ffmpeg', '-i', str(video_path),
             '-vf', filter_str,
@@ -222,9 +232,13 @@ def export_video():
             return jsonify({'error': result.stderr[-3000:]}), 500
 
         return jsonify({'export_id': job_id, 'filename': output_path.name})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     finally:
-        if srt_path.exists():
-            srt_path.unlink()
+        try:
+            Path(srt_path).unlink(missing_ok=True)
+        except Exception:
+            pass
 
 
 @app.route('/download/<filename>')
@@ -245,16 +259,21 @@ def _seconds_to_srt(seconds):
 
 def _get_font_path(font_name):
     font_map = {
-        'BebasNeue': 'fonts/BebasNeue.ttf',
-        'DancingScript': 'fonts/DancingScript.ttf',
-        'Anton': 'fonts/Anton.ttf',
-        'Montserrat': 'fonts/Montserrat.ttf',
-        'SpaceMono': 'fonts/SpaceMono.ttf',
+        'BebasNeue':      'BebasNeue.ttf',
+        'DancingScript':  'DancingScript.ttf',
+        'Anton':          'Anton.ttf',
+        'Montserrat':     'Montserrat.ttf',
+        'SpaceMono':      'SpaceMono.ttf',
+        # Fallback for PlayfairDisplay / Caveat which have no local TTF
+        'PlayfairDisplay': 'Anton.ttf',
+        'Caveat':          'Anton.ttf',
+        'Poppins':         'Montserrat.ttf',
     }
-    path = font_map.get(font_name, 'fonts/Anton.ttf')
-    # Make absolute path and escape for ffmpeg
-    abs_path = str(Path(path).absolute()).replace('\\', '/').replace(':', '\\:')
-    return abs_path
+    fname = font_map.get(font_name, 'Anton.ttf')
+    # Resolve relative to app.py's directory so CWD doesn't matter
+    abs_path = str((BASE_DIR / 'fonts' / fname).resolve())
+    # Escape colons for ffmpeg on all platforms
+    return abs_path.replace('\\', '/').replace(':', '\\:')
 
 
 def _hex_to_ass(hex_color):
@@ -263,36 +282,54 @@ def _hex_to_ass(hex_color):
     return f"&H00{b}{g}{r}"
 
 
-def _build_ffmpeg_filter(style, srt_path, scale=1.0, position='bottom'):
+def _apply_case(text, case):
+    if case == 'upper': return text.upper()
+    if case == 'lower': return text.lower()
+    if case == 'title': return text.title()
+    return text
+
+
+def _build_ffmpeg_filter(style, srt_path, scale=1.0, position='bottom', custom=None):
+    if custom is None:
+        custom = {}
+
     srt_escaped = srt_path.replace('\\', '/').replace(':', '\\:')
 
-    margin_map = {'bottom': 60, 'center': 0, 'top': 60}
+    # ASS alignment: 2=bottom-center, 5=middle-center, 8=top-center
     alignment_map = {'bottom': 2, 'center': 5, 'top': 8}
-
-    margin_v = margin_map.get(position, 60)
+    margin_map    = {'bottom': 60, 'center': 0, 'top': 60}
     alignment = alignment_map.get(position, 2)
+    margin_v  = margin_map.get(position, 60)
 
     line1 = style.get('line1', {})
-    font_path = _get_font_path(line1.get('font', 'Anton'))
-    font_size = int(line1.get('size', 60) * scale)
-    color = _hex_to_ass(line1.get('color', '#FFFFFF'))
-    bold = 1 if line1.get('bold', True) else 0
+
+    # Apply custom overrides from frontend
+    font_name = custom.get('font1') or line1.get('font', 'Anton')
+    font_size = int((custom.get('size1') or line1.get('size', 60)) * scale)
+    hex_color = custom.get('color1') or line1.get('color', '#FFFFFF')
+    bold      = 1 if line1.get('bold', True) else 0
+    case      = custom.get('case1') or line1.get('case', 'upper')
+
+    color = _hex_to_ass(hex_color)
+    font_path = _get_font_path(font_name)
+    fonts_dir = str((BASE_DIR / 'fonts').resolve()).replace('\\', '/').replace(':', '\\:')
+
     outline_color = '&H00000000'
     outline = 2
-    shadow = 0
+    shadow  = 0
 
-    if line1.get('glow'):
-        outline_color = _hex_to_ass(line1.get('color', '#00FF44'))
+    if line1.get('glow') or custom.get('glow_strength', 0) > 0:
+        outline_color = color
         outline = 3
-        shadow = 2
+        shadow  = 2
 
-    highlight = style.get('highlight', {})
-    if highlight:
-        outline_color = _hex_to_ass(highlight.get('bg', '#CC0000'))
+    highlight = style.get('highlight') or {}
+    if highlight and highlight.get('bg'):
+        outline_color = _hex_to_ass(highlight['bg'])
         outline = 8
 
     force_style = (
-        f"FontName={line1.get('font', 'Anton')},"
+        f"FontName={font_name},"
         f"FontSize={font_size},"
         f"Bold={bold},"
         f"PrimaryColour={color},"
@@ -303,10 +340,8 @@ def _build_ffmpeg_filter(style, srt_path, scale=1.0, position='bottom'):
         f"MarginV={margin_v}"
     )
 
-    return f"subtitles='{srt_escaped}':force_style='{force_style}'"
+    return f"subtitles='{srt_escaped}':fontsdir='{fonts_dir}':force_style='{force_style}'"
 
 
 if __name__ == '__main__':
-    app.config['UPLOAD_FOLDER'].mkdir(exist_ok=True)
-    app.config['EXPORT_FOLDER'].mkdir(exist_ok=True)
     app.run(debug=True, port=5050)
