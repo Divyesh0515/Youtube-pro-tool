@@ -209,6 +209,10 @@ def export_video():
     style = STYLES.get(style_key, STYLES['mehfil'])
     job_id = str(uuid.uuid4())
 
+    drag_x       = int(data.get('drag_x', 0))
+    drag_y       = int(data.get('drag_y', 0))
+    line_gap_extra = int(data.get('line_gap_extra', 0))
+
     # Probe video dimensions for proper ASS PlayRes
     probe = subprocess.run([
         'ffprobe', '-v', 'error', '-select_streams', 'v:0',
@@ -228,11 +232,13 @@ def export_video():
         ass_path = tf.name
         if word_by_word and words_data:
             ass_content = _build_ass_word_by_word(
-                words_data, style, font_size_scale, position, custom, vid_w, vid_h
+                words_data, style, font_size_scale, position, custom, vid_w, vid_h,
+                drag_x, drag_y
             )
         else:
             ass_content = _build_ass(
-                captions, style, font_size_scale, position, custom, vid_w, vid_h
+                captions, style, font_size_scale, position, custom, vid_w, vid_h,
+                drag_x, drag_y, line_gap_extra
             )
         tf.write(ass_content)
 
@@ -318,7 +324,8 @@ def _ass_time(seconds):
     return f"{h}:{m:02d}:{int(s):02d}.{cs:02d}"
 
 
-def _build_ass(captions, style, scale, position, custom, vid_w, vid_h):
+def _build_ass(captions, style, scale, position, custom, vid_w, vid_h,
+               drag_x=0, drag_y=0, line_gap_extra=0):
     """Build a full ASS subtitle file matching the canvas preview styling."""
     line1_cfg = style.get('line1', {})
     line2_cfg = style.get('line2', {})
@@ -326,62 +333,75 @@ def _build_ass(captions, style, scale, position, custom, vid_w, vid_h):
     has_line2  = bool(line2_cfg and (line2_cfg.get('font') or line2_cfg.get('color')))
     has_highlight = bool(highlight and highlight.get('bg'))
 
-    # Resolve overrides
+    # Font sizes scaled exactly like canvas: size * scale * min(W,H)/1000
+    base_dim = min(vid_w, vid_h)
     font1  = _get_font_name(line1_cfg.get('font', 'Anton'), custom.get('font1'))
-    size1  = int((custom.get('size1') or line1_cfg.get('size', 60)) * scale)
+    size1  = max(10, int((custom.get('size1') or line1_cfg.get('size', 60)) * scale * base_dim / 1000))
     color1 = custom.get('color1') or line1_cfg.get('color', '#FFFFFF')
     bold1  = 1 if line1_cfg.get('bold', True) else 0
     case1  = custom.get('case1') or line1_cfg.get('case', 'upper')
 
     font2  = _get_font_name(line2_cfg.get('font', 'Anton'), custom.get('font2')) if has_line2 else font1
-    size2  = int((custom.get('size2') or line2_cfg.get('size', 40)) * scale) if has_line2 else size1
+    size2  = max(10, int((custom.get('size2') or line2_cfg.get('size', 40)) * scale * base_dim / 1000)) if has_line2 else size1
     color2 = (custom.get('color2') or line2_cfg.get('color', '#FFFFFF')) if has_line2 else color1
     bold2  = (1 if line2_cfg.get('bold') else 0) if has_line2 else bold1
     case2  = (custom.get('case2') or line2_cfg.get('case', 'lower')) if has_line2 else case1
 
     glow_strength = custom.get('glow_strength', 0)
 
+    # Gap between lines: same formula as canvas (15% of size1 + lineGapExtra scaled)
+    gap_px = int(size1 * 0.15) + int(line_gap_extra * base_dim / 500)
+
     # ASS alignment codes: 2=bottom-center, 5=center, 8=top-center
-    align_map  = {'bottom': 2, 'center': 5, 'top': 8}
-    marginV_map = {'bottom': 80, 'center': 0, 'top': 80}
-    alignment  = align_map.get(position, 2)
-    margin_v   = marginV_map.get(position, 80)
+    align_map = {'bottom': 2, 'center': 5, 'top': 8}
+    alignment = align_map.get(position, 2)
+
+    # MarginV base (5% of height), adjusted by drag_y
+    # For bottom: L2 (visual bottom) has smaller MarginV, L1 (visual top) has larger
+    # drag_y positive = captions move DOWN = smaller MarginV (ASS bottom ref)
+    mv_base = round(vid_h * 0.05)
+    if position == 'bottom':
+        mv_L2  = max(0, mv_base - drag_y)           # line2 is visual bottom
+        mv_L1  = mv_L2 + size2 + gap_px             # line1 sits above line2
+    elif position == 'top':
+        mv_L1  = max(0, mv_base + drag_y)
+        mv_L2  = mv_L1 + size1 + gap_px
+        # For top alignment use align=8; L1 on top, L2 below
+    else:  # center
+        mv_L1 = max(0, -drag_y)
+        mv_L2 = mv_L1 + size1 + gap_px
+
+    # Horizontal drag: use \pos override tag when non-zero
+    cx = vid_w // 2 + drag_x
+    def pos_tag(y_ref):
+        if drag_x == 0:
+            return ''
+        return r'{\pos(' + str(cx) + ',' + str(y_ref) + r')}'
+
+    # Approximate Y positions for \pos tag (needed when drag_x != 0)
+    # For bottom alignment: y_bottom_of_text = vid_h - MarginV
+    y_L2_ass = vid_h - mv_L2
+    y_L1_ass = vid_h - mv_L1
 
     # Outline & shadow approximating canvas stroke
     if has_highlight:
-        # BorderStyle=3 = opaque box background
-        border_style1 = 3
-        outline1 = 0
-        shadow1  = 0
+        border_style1 = 3; outline1 = 0; shadow1 = 0
         back_color1 = _hex_to_ass(highlight['bg'])
         primary1    = _hex_to_ass(highlight.get('color', '#FFFFFF'))
     elif line1_cfg.get('glow') or glow_strength > 0:
-        border_style1 = 1
-        outline1 = 3
-        shadow1  = 2
-        back_color1  = _hex_to_ass('#000000', alpha=0x80)
-        primary1     = _hex_to_ass(color1)
+        border_style1 = 1; outline1 = 3; shadow1 = 2
+        back_color1 = _hex_to_ass('#000000', alpha=0x80)
+        primary1    = _hex_to_ass(color1)
     else:
-        border_style1 = 1
-        outline1 = 3   # thick outline approximates canvas strokeText
-        shadow1  = 1
-        back_color1  = _hex_to_ass('#000000', alpha=0x80)
-        primary1     = _hex_to_ass(color1)
+        border_style1 = 1; outline1 = 3; shadow1 = 1
+        back_color1 = _hex_to_ass('#000000', alpha=0x80)
+        primary1    = _hex_to_ass(color1)
 
     outline_color1 = _hex_to_ass('#000000')
-
-    # Line2 style (always plain with outline)
-    border_style2 = 1
-    outline2 = 2
-    shadow2  = 1
-    primary2 = _hex_to_ass(color2)
+    border_style2  = 1; outline2 = 2; shadow2 = 1
+    primary2       = _hex_to_ass(color2)
     outline_color2 = _hex_to_ass('#000000')
-    back_color2 = _hex_to_ass('#000000', alpha=0x80)
-
-    # Margin between lines (line2 sits below line1 in bottom mode)
-    # We achieve two-line look by putting line1 and line2 as separate events
-    # with margin adjustments so they stack naturally.
-    margin_v2 = margin_v  # same base; ASS stacks multiple events at same position
+    back_color2    = _hex_to_ass('#000000', alpha=0x80)
 
     lines = []
     lines.append('[Script Info]')
@@ -400,13 +420,10 @@ def _build_ass(captions, style, scale, position, custom, vid_w, vid_h):
                 f'{border_st},{outline},{shadow},{align},10,10,{mv},1')
 
     lines.append(style_line('L1', font1, size1, primary1, outline_color1, back_color1,
-                             bold1, border_style1, outline1, shadow1, alignment, margin_v))
+                             bold1, border_style1, outline1, shadow1, alignment, mv_L1))
     if has_line2:
-        # Line2 sits just above or below line1 depending on position
-        # We offset MarginV so lines don't overlap
-        mv2 = margin_v + size1 + 8 if position == 'bottom' else margin_v + size1 + 8
         lines.append(style_line('L2', font2, size2, primary2, outline_color2, back_color2,
-                                 bold2, border_style2, outline2, shadow2, alignment, mv2))
+                                 bold2, border_style2, outline2, shadow2, alignment, mv_L2))
 
     lines.append('')
     lines.append('[Events]')
@@ -422,44 +439,55 @@ def _build_ass(captions, style, scale, position, custom, vid_w, vid_h):
             mid   = math.ceil(len(words) / 2)
             text1 = _apply_case(' '.join(words[:mid]), case1)
             text2 = _apply_case(' '.join(words[mid:]), case2)
-            lines.append(f'Dialogue: 0,{start},{end},L1,,0,0,0,,{text1}')
-            lines.append(f'Dialogue: 1,{start},{end},L2,,0,0,0,,{text2}')
+            lines.append(f'Dialogue: 0,{start},{end},L1,,0,0,0,,{pos_tag(y_L1_ass)}{text1}')
+            lines.append(f'Dialogue: 1,{start},{end},L2,,0,0,0,,{pos_tag(y_L2_ass)}{text2}')
         else:
             text1 = _apply_case(text, case1)
-            lines.append(f'Dialogue: 0,{start},{end},L1,,0,0,0,,{text1}')
+            lines.append(f'Dialogue: 0,{start},{end},L1,,0,0,0,,{pos_tag(y_L1_ass)}{text1}')
 
     return '\n'.join(lines)
 
 
-def _build_ass_word_by_word(words_data, style, scale, position, custom, vid_w, vid_h):
+def _build_ass_word_by_word(words_data, style, scale, position, custom, vid_w, vid_h,
+                            drag_x=0, drag_y=0):
     """Build ASS file where each word pops in individually (CapCut style)."""
     line1_cfg  = style.get('line1', {})
     highlight  = style.get('highlight') or {}
     has_highlight = bool(highlight and highlight.get('bg'))
 
+    # Font size scaled like canvas: size * scale * min(W,H)/1000
+    # Also cap single-word size at 55% of vid_w (mirrors JS cap)
+    base_dim = min(vid_w, vid_h)
     font1  = _get_font_name(line1_cfg.get('font', 'Anton'), custom.get('font1'))
-    size1  = int((custom.get('size1') or line1_cfg.get('size', 60)) * scale)
+    size1  = max(10, int((custom.get('size1') or line1_cfg.get('size', 60)) * scale * base_dim / 1000))
+    # Cap: estimate max char count ~5 chars wide, cap so one word won't exceed 55% vid_w
+    max_size_for_single = int(vid_w * 0.55 / 5)  # rough px-per-char estimate
+    size1 = min(size1, max_size_for_single)
+
     color1 = custom.get('color1') or line1_cfg.get('color', '#FFFFFF')
     bold1  = 1 if line1_cfg.get('bold', True) else 0
     case1  = custom.get('case1') or line1_cfg.get('case', 'upper')
 
-    align_map   = {'bottom': 2, 'center': 5, 'top': 8}
-    marginV_map = {'bottom': 80, 'center': 0, 'top': 80}
-    alignment   = align_map.get(position, 2)
-    margin_v    = marginV_map.get(position, 80)
+    align_map = {'bottom': 2, 'center': 5, 'top': 8}
+    alignment = align_map.get(position, 2)
+    mv_base   = round(vid_h * 0.05)
+    margin_v  = max(0, mv_base - drag_y) if position == 'bottom' else max(0, mv_base + drag_y)
 
     if has_highlight:
-        border_style = 3
-        outline = 0; shadow = 0
-        back_color   = _hex_to_ass(highlight['bg'])
-        primary      = _hex_to_ass(highlight.get('color', '#FFFFFF'))
+        border_style = 3; outline = 0; shadow = 0
+        back_color = _hex_to_ass(highlight['bg'])
+        primary    = _hex_to_ass(highlight.get('color', '#FFFFFF'))
     else:
-        border_style = 1
-        outline = 3; shadow = 1
+        border_style = 1; outline = 3; shadow = 1
         back_color = _hex_to_ass('#000000', alpha=0x80)
         primary    = _hex_to_ass(color1)
 
     outline_color = _hex_to_ass('#000000')
+
+    # Horizontal drag via \pos
+    cx = vid_w // 2 + drag_x
+    y_ref = vid_h - margin_v
+    pos_prefix = r'{\pos(' + str(cx) + ',' + str(y_ref) + r')}' if drag_x != 0 else ''
 
     lines = []
     lines.append('[Script Info]')
@@ -480,8 +508,8 @@ def _build_ass_word_by_word(words_data, style, scale, position, custom, vid_w, v
         start = _ass_time(w['start'])
         end   = _ass_time(w['end'])
         word  = _apply_case(w['word'], case1)
-        # ASS pop effect via \t transform: scale from 120% to 100%
-        text  = r'{\t(\fscx120\fscy120,\fscx100\fscy100)}' + word
+        # pop effect: scale from 120% to 100%
+        text  = pos_prefix + r'{\t(\fscx120\fscy120,\fscx100\fscy100)}' + word
         lines.append(f'Dialogue: 0,{start},{end},W,,0,0,0,,{text}')
 
     return '\n'.join(lines)

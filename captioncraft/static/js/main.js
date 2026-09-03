@@ -901,6 +901,9 @@ async function exportVideo() {
         style:state.selectedStyle,
         font_size_scale:state.sizeScale,
         position:state.position,
+        drag_x: Math.round(state.captionDragX),
+        drag_y: Math.round(state.captionDragY),
+        line_gap_extra: state.lineGapExtra,
         custom,
       })
     });
