@@ -184,3 +184,12 @@ body{background:var(--bg);color:var(--text);font-family:'Montserrat',sans-serif;
 .progress-line{height:2px;background:var(--border);border-radius:2px;margin-top:.35rem;overflow:hidden}
 .progress-line-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;width:30%;animation:slide-bar 1.5s ease-in-out infinite}
 @keyframes slide-bar{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}
+
+/* Words-per-caption row */
+.wpc-row{display:flex;align-items:center;gap:.5rem;padding:.4rem .9rem .1rem;flex-shrink:0}
+.wpc-lbl{font-size:.6rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;min-width:90px}
+.wpc-val{font-size:.6rem;color:var(--text-mid);white-space:nowrap;min-width:46px;text-align:right}
+
+/* Drag cursor on video-frame when video is loaded */
+#video-frame.has-video{cursor:grab}
+#video-frame.has-video:active{cursor:grabbing}

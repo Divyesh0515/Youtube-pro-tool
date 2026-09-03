@@ -18,7 +18,11 @@ const state = {
   captionBgColor: '#000000',
   captionBgOpacity: 0.55,
   captionBgPadding: 12,
-  wordByWord: false,  // CapCut style: each word pops individually
+  wordByWord: false,
+  lineGapExtra: 0,       // extra gap between line1 and line2 (slider units)
+  wordsPerCaption: 3,    // words per caption group
+  captionDragX: 0,       // drag offset in canvas px (X)
+  captionDragY: 0,       // drag offset in canvas px (Y)
 };
 
 /* ── FONT MAP (canvas) ── */
@@ -82,6 +86,8 @@ function _resetSessionState() {
   animState.capId = null;
   animState.startMs = 0;
   stopAnimLoop();
+  state.captionDragX = 0;
+  state.captionDragY = 0;
   // Reset caption editor UI
   renderCaptionList();
   document.getElementById('btn-export-top').disabled = true;
@@ -117,6 +123,7 @@ function initVideoPlayer(file) {
   overlay.style.display = 'none';
   video.style.display   = 'block';
   canvas.style.display  = 'block';
+  document.getElementById('video-frame').classList.add('has-video');
 
   _prevBlobUrl = URL.createObjectURL(file);
   video.src = _prevBlobUrl;
@@ -268,6 +275,8 @@ function setPosition(pos, btn) {
   document.querySelectorAll('.pos-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   state.position=pos;
+  state.captionDragX = 0;
+  state.captionDragY = 0;
   drawCaptions();
 }
 
@@ -391,7 +400,8 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
   const l1font = state.customFont1 ? (FONT_MAP[state.customFont1]||"'Anton'") : (FONT_MAP[l1cfg.font]||"'Anton'");
   const l2font = l2cfg ? (state.customFont2 ? (FONT_MAP[state.customFont2]||"'Dancing Script'") : (FONT_MAP[l2cfg.font]||"'Dancing Script'")) : "'Dancing Script'";
 
-  const maxW = W * 0.90;
+  // Word-by-word: single word should stay reasonably sized (cap at 55% of canvas width)
+  const maxW = state.wordByWord && words.length === 1 ? W * 0.55 : W * 0.90;
   ctx.font = `${l1cfg.bold?'900':'700'} ${l1size}px ${l1font}`;
   while (l1size > 18 && ctx.measureText(t1).width > maxW) l1size = Math.floor(l1size * 0.93);
   if (t2 && l2cfg) {
@@ -400,20 +410,26 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
   }
 
   const marginV = Math.round(H * 0.05);
-  const gap = Math.round(l1size * 0.15);
+  const gapBase = Math.round(l1size * 0.15);
+  const gapExtra = Math.round(state.lineGapExtra * (baseDim / 500));
+  const gap = gapBase + gapExtra;
+  const dragX = state.captionDragX || 0;
+  const dragY = state.captionDragY || 0;
   let y1, y2;
   if (pos === 'bottom') {
-    y2 = t2 ? H - marginV : 0;
-    y1 = t2 ? y2 - l2size - gap : H - marginV;
+    y2 = t2 ? H - marginV + dragY : 0;
+    y1 = t2 ? y2 - l2size - gap : H - marginV + dragY;
   } else if (pos === 'top') {
-    y1 = marginV + l1size;
+    y1 = marginV + l1size + dragY;
     y2 = y1 + l2size + gap;
   } else {
     const totalH = l1size + (t2 ? l2size + gap : 0);
-    y1 = (H - totalH) / 2 + l1size;
+    y1 = (H - totalH) / 2 + l1size + dragY;
     y2 = y1 + l2size + gap;
   }
   const baseY = y1;
+  // Horizontal shift from drag
+  const cx = W / 2 + dragX;
 
   const t_anim = Math.min(elapsed / DUR, 1);
   let offY1 = 0, offY2 = 0, scl1 = 1, scl2 = 1, alpha1 = 1, alpha2 = 1;
@@ -466,11 +482,7 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
       tw2 = ctx.measureText(t2).width;
     }
     const maxTW = Math.max(tw1, tw2);
-    const blockTop = pos === 'top'
-      ? y1 - l1size - pad
-      : pos === 'center'
-        ? y1 - l1size - pad
-        : (t2 ? y1 - l1size - pad : y1 - l1size - pad);
+    const blockTop = y1 - l1size - pad;
     const blockH = l1size + (t2 ? l2size + gap : 0) + pad * 2;
     const bgR = parseInt(state.captionBgColor.slice(1,3),16);
     const bgG = parseInt(state.captionBgColor.slice(3,5),16);
@@ -480,7 +492,7 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
     ctx.fillStyle = `rgb(${bgR},${bgG},${bgB})`;
     ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
     ctx.beginPath();
-    roundRect(ctx, W/2 - maxTW/2 - pad, blockTop, maxTW + pad*2, blockH, 10);
+    roundRect(ctx, cx - maxTW/2 - pad, blockTop, maxTW + pad*2, blockH, 10);
     ctx.fill();
     ctx.restore();
   }
@@ -504,6 +516,7 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
     grad.addColorStop(1, fillColor);
 
     ctx.save();
+    ctx.textAlign = 'center';  // always center — prevents stale state leaking in
     if (isGlow || glowOverride) {
       const gc = glowColor || fillColor;
       const gb = glowOverride ? state.glowStrength * (baseDim/500) : 28 * scale;
@@ -532,17 +545,18 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
   if (hl && hl.bg && t1) {
     ctx.save();
     ctx.filter = 'none';
-    if (scl1 !== 1) { ctx.translate(W/2, baseY+offY1); ctx.scale(scl1,scl1); ctx.translate(-W/2,-(baseY+offY1)); }
+    ctx.textAlign = 'center';
+    if (scl1 !== 1) { ctx.translate(cx, baseY+offY1); ctx.scale(scl1,scl1); ctx.translate(-cx,-(baseY+offY1)); }
     const tw = ctx.measureText(t1).width;
     const pad = 14;
     ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; ctx.shadowOffsetX = 0;
     ctx.fillStyle = hl.bg;
     ctx.beginPath();
-    roundRect(ctx, W/2-tw/2-pad, baseY+offY1-l1size+4, tw+pad*2, l1size+10, 8);
+    roundRect(ctx, cx-tw/2-pad, baseY+offY1-l1size+4, tw+pad*2, l1size+10, 8);
     ctx.fill();
     ctx.fillStyle = hl.color || '#FFFFFF';
     ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 0;
-    ctx.fillText(t1, W/2, baseY+offY1);
+    ctx.fillText(t1, cx, baseY+offY1);
     ctx.restore();
   } else {
     ctx.save();
@@ -550,13 +564,11 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
       const blurPx1 = Math.round((1 - t_anim) * 8);
       ctx.filter = blurPx1 > 0 ? `blur(${blurPx1}px)` : 'none';
     }
-    if (scl1 !== 1) { ctx.translate(W/2,baseY+offY1); ctx.scale(scl1,scl1); ctx.translate(-W/2,-(baseY+offY1)); }
+    if (scl1 !== 1) { ctx.translate(cx,baseY+offY1); ctx.scale(scl1,scl1); ctx.translate(-cx,-(baseY+offY1)); }
     if (activeWord && line1w.length > 0) {
-      ctx.textAlign = 'left';
-      drawLineWithHighlight(ctx, line1w.map(w=>applyCase(w, state.customCase1||l1cfg.case||'upper')), activeWord, W/2, baseY+offY1, l1size, state.highlightColor, l1baseColor, l1font, l1cfg.bold, strokeW, lightenHex, drawTextPremium);
-      ctx.textAlign = 'center';
+      drawLineWithHighlight(ctx, line1w.map(w=>applyCase(w, state.customCase1||l1cfg.case||'upper')), activeWord, cx, baseY+offY1, l1size, state.highlightColor, l1baseColor, l1font, l1cfg.bold, strokeW, lightenHex, drawTextPremium);
     } else {
-      drawTextPremium(t1, W/2, baseY+offY1, l1baseColor, l1cfg.glow, l1cfg.color, l1cfg.bold, l1size);
+      drawTextPremium(t1, cx, baseY+offY1, l1baseColor, l1cfg.glow, l1cfg.color, l1cfg.bold, l1size);
     }
     ctx.restore();
   }
@@ -571,13 +583,11 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
       const blurPx2 = Math.round((1 - t2p(100)) * 8);
       ctx.filter = blurPx2 > 0 ? `blur(${blurPx2}px)` : 'none';
     }
-    if (scl2 !== 1) { ctx.translate(W/2,y2+offY2); ctx.scale(scl2,scl2); ctx.translate(-W/2,-(y2+offY2)); }
+    if (scl2 !== 1) { ctx.translate(cx,y2+offY2); ctx.scale(scl2,scl2); ctx.translate(-cx,-(y2+offY2)); }
     if (activeWord && line2w.length > 0) {
-      ctx.textAlign = 'left';
-      drawLineWithHighlight(ctx, line2w.map(w=>applyCase(w, state.customCase2||l2cfg.case||'lower')), activeWord, W/2, y2+offY2, l2size, state.highlightColor, l2baseColor, l2font, l2cfg.bold, strokeW, lightenHex, drawTextPremium);
-      ctx.textAlign = 'center';
+      drawLineWithHighlight(ctx, line2w.map(w=>applyCase(w, state.customCase2||l2cfg.case||'lower')), activeWord, cx, y2+offY2, l2size, state.highlightColor, l2baseColor, l2font, l2cfg.bold, strokeW, lightenHex, drawTextPremium);
     } else {
-      drawTextPremium(t2, W/2, y2+offY2, l2baseColor, l2cfg.glow, l2cfg.color, l2cfg.bold, l2size);
+      drawTextPremium(t2, cx, y2+offY2, l2baseColor, l2cfg.glow, l2cfg.color, l2cfg.bold, l2size);
     }
     ctx.restore();
   }
@@ -588,8 +598,9 @@ function drawStyle(ctx, W, H, text, style, elapsed=999, activeWord=null) {
 // Draw text line with one word highlighted (karaoke), non-active words get full premium styling
 function drawLineWithHighlight(ctx, words, activeWord, x, y, size, hlColor, baseColor, font, bold, strokeW, lightenHex, drawTextPremium) {
   const activeNorm = activeWord ? activeWord.word.trim().toLowerCase().replace(/[^a-z0-9]/g,'') : '';
-  // Use same bold weight as main rendering
   const weight = bold ? '900' : '700';
+  ctx.save();
+  ctx.textAlign = 'left';
   ctx.font = `${weight} ${size}px ${font}`;
   const totalW = ctx.measureText(words.join(' ')).width;
   let curX = x - totalW / 2;
@@ -634,6 +645,7 @@ function drawLineWithHighlight(ctx, words, activeWord, x, y, size, hlColor, base
     }
     curX += ww + spaceW;
   });
+  ctx.restore();
 }
 
 function isLightColor(hex) {
@@ -781,6 +793,72 @@ function toggleWordByWord(el) { state.wordByWord=el.checked; drawCaptions(); }
 function toggleCaptionBg(el) { state.captionBg=el.checked; drawCaptions(); }
 function setCaptionBgColor(val) { state.captionBgColor=val; document.getElementById('bg-color-hex').textContent=val; drawCaptions(); }
 function setCaptionBgOpacity(val) { state.captionBgOpacity=val/100; document.getElementById('bg-opacity-val').textContent=val+'%'; drawCaptions(); }
+function setLineGap(val) { state.lineGapExtra=parseInt(val); document.getElementById('line-gap-val').textContent=val; drawCaptions(); }
+function setWordsPerCaption(val) { state.wordsPerCaption=parseInt(val); document.getElementById('wpc-val').textContent=val+' words'; regroupCaptions(); }
+
+/* ── REGROUP CAPTIONS ── */
+function regroupCaptions() {
+  if (!state.words.length) return;
+  const n = state.wordsPerCaption || 3;
+  const newCaps = [];
+  for (let i = 0; i < state.words.length; i += n) {
+    const chunk = state.words.slice(i, i + n);
+    newCaps.push({
+      _id: state.nextId++,
+      start: chunk[0].start,
+      end:   chunk[chunk.length - 1].end,
+      text:  chunk.map(w => w.word).join(' ').trim(),
+    });
+  }
+  state.captions = newCaps;
+  renderCaptionList();
+}
+
+/* ── CAPTION DRAG ── */
+(function initCaptionDrag() {
+  let dragging = false, lastX = 0, lastY = 0;
+
+  function getCanvasXY(e, canvas) {
+    const rect = canvas.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return {
+      x: (src.clientX - rect.left) * (canvas.width  / rect.width),
+      y: (src.clientY - rect.top)  * (canvas.height / rect.height),
+    };
+  }
+
+  function onStart(e) {
+    const canvas = document.getElementById('caption-canvas');
+    if (canvas.style.display === 'none') return;
+    e.preventDefault();
+    const p = getCanvasXY(e, canvas);
+    lastX = p.x; lastY = p.y;
+    dragging = true;
+  }
+  function onMove(e) {
+    if (!dragging) return;
+    e.preventDefault();
+    const canvas = document.getElementById('caption-canvas');
+    const p = getCanvasXY(e, canvas);
+    state.captionDragX += p.x - lastX;
+    state.captionDragY += p.y - lastY;
+    lastX = p.x; lastY = p.y;
+    drawCaptions();
+  }
+  function onEnd() { dragging = false; }
+
+  // Attach to the video-frame container so clicks pass through canvas (pointer-events:none)
+  window.addEventListener('load', () => {
+    const frame = document.getElementById('video-frame');
+    frame.addEventListener('mousedown', onStart);
+    frame.addEventListener('mousemove', onMove);
+    frame.addEventListener('mouseup',   onEnd);
+    frame.addEventListener('mouseleave',onEnd);
+    frame.addEventListener('touchstart', onStart, { passive: false });
+    frame.addEventListener('touchmove',  onMove,  { passive: false });
+    frame.addEventListener('touchend',   onEnd);
+  });
+})();
 
 function showTab(name, btn) {
   document.querySelectorAll('.rtab').forEach(b=>b.classList.remove('active'));

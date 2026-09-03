@@ -101,6 +101,11 @@
         </button>
         <div class="progress-line" id="t-progress" style="display:none;"><div class="progress-line-fill"></div></div>
       </div>
+      <div class="wpc-row">
+        <label class="wpc-lbl">Words / caption</label>
+        <input type="range" min="1" max="8" value="3" class="style-range" id="wpc-slider" oninput="setWordsPerCaption(this.value)"/>
+        <span class="wpc-val" id="wpc-val">3 words</span>
+      </div>
 
       <div id="empty-captions" class="empty-state">
         <div class="empty-icon">🎞️</div>
@@ -233,6 +238,15 @@
           <label class="style-lbl">Duration</label>
           <input type="range" min="100" max="800" value="300" class="style-range" id="anim-dur" oninput="setAnimDur(this.value)"/>
           <span class="style-range-val" id="anim-dur-val">300ms</span>
+        </div>
+
+        <div class="style-divider"></div>
+
+        <div class="style-section-label">Line Spacing</div>
+        <div class="style-row">
+          <label class="style-lbl">Gap</label>
+          <input type="range" min="-20" max="80" value="0" class="style-range" id="line-gap" oninput="setLineGap(this.value)"/>
+          <span class="style-range-val" id="line-gap-val">0</span>
         </div>
 
         <div class="style-divider"></div>
