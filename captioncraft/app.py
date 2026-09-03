@@ -6,6 +6,7 @@ def _patched_normalize(value, encoding):
 _httpx_utils.normalize_header_value = _patched_normalize
 
 import os
+import math
 import uuid
 import subprocess
 import tempfile
@@ -22,7 +23,6 @@ app.config['UPLOAD_FOLDER'] = BASE_DIR / 'uploads'
 app.config['EXPORT_FOLDER'] = BASE_DIR / 'exports'
 app.config['FONTS_FOLDER'] = BASE_DIR / 'fonts'
 
-# Create required directories at startup regardless of how Flask is launched
 app.config['UPLOAD_FOLDER'].mkdir(exist_ok=True)
 app.config['EXPORT_FOLDER'].mkdir(exist_ok=True)
 
@@ -199,8 +199,9 @@ def export_video():
     style_key = data.get('style', 'mehfil')
     font_size_scale = float(data.get('font_size_scale', 1.0))
     position = data.get('position', 'bottom')
-    # Custom overrides from frontend styling panel
     custom = data.get('custom', {})
+    word_by_word = data.get('word_by_word', False)
+    words_data = data.get('words', [])
 
     if not video_path.exists():
         return jsonify({'error': 'Video not found'}), 404
@@ -208,18 +209,42 @@ def export_video():
     style = STYLES.get(style_key, STYLES['mehfil'])
     job_id = str(uuid.uuid4())
 
-    # Use NamedTemporaryFile to avoid race condition
-    with tempfile.NamedTemporaryFile(suffix='.srt', delete=False, mode='w', encoding='utf-8') as tf:
-        srt_path = tf.name
-        for i, cap in enumerate(captions, 1):
-            start = _seconds_to_srt(cap['start'])
-            end = _seconds_to_srt(cap['end'])
-            tf.write(f"{i}\n{start} --> {end}\n{cap['text']}\n\n")
+    # Probe video dimensions for proper ASS PlayRes
+    probe = subprocess.run([
+        'ffprobe', '-v', 'error', '-select_streams', 'v:0',
+        '-show_entries', 'stream=width,height',
+        '-of', 'csv=p=0', str(video_path)
+    ], capture_output=True, text=True)
+    vid_w, vid_h = 1080, 1920
+    if probe.returncode == 0 and probe.stdout.strip():
+        parts = probe.stdout.strip().split(',')
+        if len(parts) == 2:
+            try:
+                vid_w, vid_h = int(parts[0]), int(parts[1])
+            except ValueError:
+                pass
+
+    with tempfile.NamedTemporaryFile(suffix='.ass', delete=False, mode='w', encoding='utf-8') as tf:
+        ass_path = tf.name
+        if word_by_word and words_data:
+            ass_content = _build_ass_word_by_word(
+                words_data, style, font_size_scale, position, custom, vid_w, vid_h
+            )
+        else:
+            ass_content = _build_ass(
+                captions, style, font_size_scale, position, custom, vid_w, vid_h
+            )
+        tf.write(ass_content)
 
     output_path = app.config['EXPORT_FOLDER'] / f"{job_id}_captioned.mp4"
 
     try:
-        filter_str = _build_ffmpeg_filter(style, srt_path, font_size_scale, position, custom)
+        # Use ass filter (not subtitles) for full ASS support including fontsdir
+        fonts_dir = str((BASE_DIR / 'fonts').resolve())
+        ass_escaped = ass_path.replace('\\', '/').replace(':', '\\:')
+        fonts_escaped = fonts_dir.replace('\\', '/').replace(':', '\\:')
+        filter_str = f"ass='{ass_escaped}':fontsdir='{fonts_escaped}'"
+
         cmd = [
             'ffmpeg', '-i', str(video_path),
             '-vf', filter_str,
@@ -236,7 +261,7 @@ def export_video():
         return jsonify({'error': str(e)}), 500
     finally:
         try:
-            Path(srt_path).unlink(missing_ok=True)
+            Path(ass_path).unlink(missing_ok=True)
         except Exception:
             pass
 
@@ -249,38 +274,7 @@ def download(filename):
     return send_file(str(filepath), as_attachment=True)
 
 
-def _seconds_to_srt(seconds):
-    h = int(seconds // 3600)
-    m = int((seconds % 3600) // 60)
-    s = int(seconds % 60)
-    ms = int((seconds - int(seconds)) * 1000)
-    return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
-
-
-def _get_font_path(font_name):
-    font_map = {
-        'BebasNeue':      'BebasNeue.ttf',
-        'DancingScript':  'DancingScript.ttf',
-        'Anton':          'Anton.ttf',
-        'Montserrat':     'Montserrat.ttf',
-        'SpaceMono':      'SpaceMono.ttf',
-        # Fallback for PlayfairDisplay / Caveat which have no local TTF
-        'PlayfairDisplay': 'Anton.ttf',
-        'Caveat':          'Anton.ttf',
-        'Poppins':         'Montserrat.ttf',
-    }
-    fname = font_map.get(font_name, 'Anton.ttf')
-    # Resolve relative to app.py's directory so CWD doesn't matter
-    abs_path = str((BASE_DIR / 'fonts' / fname).resolve())
-    # Escape colons for ffmpeg on all platforms
-    return abs_path.replace('\\', '/').replace(':', '\\:')
-
-
-def _hex_to_ass(hex_color):
-    h = hex_color.lstrip('#')
-    r, g, b = h[0:2], h[2:4], h[4:6]
-    return f"&H00{b}{g}{r}"
-
+# ── Helpers ──────────────────────────────────────────────────────────────────
 
 def _apply_case(text, case):
     if case == 'upper': return text.upper()
@@ -289,58 +283,208 @@ def _apply_case(text, case):
     return text
 
 
-def _build_ffmpeg_filter(style, srt_path, scale=1.0, position='bottom', custom=None):
-    if custom is None:
-        custom = {}
+def _hex_to_ass(hex_color, alpha=0):
+    """Convert #RRGGBB to ASS &HAABBGGRR format."""
+    h = hex_color.lstrip('#')
+    if len(h) != 6:
+        h = 'FFFFFF'
+    r, g, b = h[0:2], h[2:4], h[4:6]
+    aa = f'{alpha:02X}'
+    return f"&H{aa}{b}{g}{r}"
 
-    srt_escaped = srt_path.replace('\\', '/').replace(':', '\\:')
 
-    # ASS alignment: 2=bottom-center, 5=middle-center, 8=top-center
-    alignment_map = {'bottom': 2, 'center': 5, 'top': 8}
-    margin_map    = {'bottom': 60, 'center': 0, 'top': 60}
-    alignment = alignment_map.get(position, 2)
-    margin_v  = margin_map.get(position, 60)
+def _get_font_name(font_key, custom_font=None):
+    """Return font name as it should appear in ASS FontName field."""
+    font_display = {
+        'BebasNeue':      'Bebas Neue',
+        'DancingScript':  'Dancing Script',
+        'Anton':          'Anton',
+        'Montserrat':     'Montserrat',
+        'SpaceMono':      'Space Mono',
+        'PlayfairDisplay':'Playfair Display',
+        'Caveat':         'Caveat',
+        'Poppins':        'Poppins',
+    }
+    key = custom_font or font_key or 'Anton'
+    return font_display.get(key, key)
 
-    line1 = style.get('line1', {})
 
-    # Apply custom overrides from frontend
-    font_name = custom.get('font1') or line1.get('font', 'Anton')
-    font_size = int((custom.get('size1') or line1.get('size', 60)) * scale)
-    hex_color = custom.get('color1') or line1.get('color', '#FFFFFF')
-    bold      = 1 if line1.get('bold', True) else 0
-    case      = custom.get('case1') or line1.get('case', 'upper')
+def _ass_time(seconds):
+    """Convert seconds to ASS time format H:MM:SS.cc"""
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = seconds % 60
+    cs = int((s - int(s)) * 100)
+    return f"{h}:{m:02d}:{int(s):02d}.{cs:02d}"
 
-    color = _hex_to_ass(hex_color)
-    font_path = _get_font_path(font_name)
-    fonts_dir = str((BASE_DIR / 'fonts').resolve()).replace('\\', '/').replace(':', '\\:')
 
-    outline_color = '&H00000000'
-    outline = 2
-    shadow  = 0
+def _build_ass(captions, style, scale, position, custom, vid_w, vid_h):
+    """Build a full ASS subtitle file matching the canvas preview styling."""
+    line1_cfg = style.get('line1', {})
+    line2_cfg = style.get('line2', {})
+    highlight  = style.get('highlight') or {}
+    has_line2  = bool(line2_cfg and (line2_cfg.get('font') or line2_cfg.get('color')))
+    has_highlight = bool(highlight and highlight.get('bg'))
 
-    if line1.get('glow') or custom.get('glow_strength', 0) > 0:
-        outline_color = color
-        outline = 3
-        shadow  = 2
+    # Resolve overrides
+    font1  = _get_font_name(line1_cfg.get('font', 'Anton'), custom.get('font1'))
+    size1  = int((custom.get('size1') or line1_cfg.get('size', 60)) * scale)
+    color1 = custom.get('color1') or line1_cfg.get('color', '#FFFFFF')
+    bold1  = 1 if line1_cfg.get('bold', True) else 0
+    case1  = custom.get('case1') or line1_cfg.get('case', 'upper')
 
-    highlight = style.get('highlight') or {}
-    if highlight and highlight.get('bg'):
-        outline_color = _hex_to_ass(highlight['bg'])
-        outline = 8
+    font2  = _get_font_name(line2_cfg.get('font', 'Anton'), custom.get('font2')) if has_line2 else font1
+    size2  = int((custom.get('size2') or line2_cfg.get('size', 40)) * scale) if has_line2 else size1
+    color2 = (custom.get('color2') or line2_cfg.get('color', '#FFFFFF')) if has_line2 else color1
+    bold2  = (1 if line2_cfg.get('bold') else 0) if has_line2 else bold1
+    case2  = (custom.get('case2') or line2_cfg.get('case', 'lower')) if has_line2 else case1
 
-    force_style = (
-        f"FontName={font_name},"
-        f"FontSize={font_size},"
-        f"Bold={bold},"
-        f"PrimaryColour={color},"
-        f"OutlineColour={outline_color},"
-        f"Outline={outline},"
-        f"Shadow={shadow},"
-        f"Alignment={alignment},"
-        f"MarginV={margin_v}"
-    )
+    glow_strength = custom.get('glow_strength', 0)
 
-    return f"subtitles='{srt_escaped}':fontsdir='{fonts_dir}':force_style='{force_style}'"
+    # ASS alignment codes: 2=bottom-center, 5=center, 8=top-center
+    align_map  = {'bottom': 2, 'center': 5, 'top': 8}
+    marginV_map = {'bottom': 80, 'center': 0, 'top': 80}
+    alignment  = align_map.get(position, 2)
+    margin_v   = marginV_map.get(position, 80)
+
+    # Outline & shadow approximating canvas stroke
+    if has_highlight:
+        # BorderStyle=3 = opaque box background
+        border_style1 = 3
+        outline1 = 0
+        shadow1  = 0
+        back_color1 = _hex_to_ass(highlight['bg'])
+        primary1    = _hex_to_ass(highlight.get('color', '#FFFFFF'))
+    elif line1_cfg.get('glow') or glow_strength > 0:
+        border_style1 = 1
+        outline1 = 3
+        shadow1  = 2
+        back_color1  = _hex_to_ass('#000000', alpha=0x80)
+        primary1     = _hex_to_ass(color1)
+    else:
+        border_style1 = 1
+        outline1 = 3   # thick outline approximates canvas strokeText
+        shadow1  = 1
+        back_color1  = _hex_to_ass('#000000', alpha=0x80)
+        primary1     = _hex_to_ass(color1)
+
+    outline_color1 = _hex_to_ass('#000000')
+
+    # Line2 style (always plain with outline)
+    border_style2 = 1
+    outline2 = 2
+    shadow2  = 1
+    primary2 = _hex_to_ass(color2)
+    outline_color2 = _hex_to_ass('#000000')
+    back_color2 = _hex_to_ass('#000000', alpha=0x80)
+
+    # Margin between lines (line2 sits below line1 in bottom mode)
+    # We achieve two-line look by putting line1 and line2 as separate events
+    # with margin adjustments so they stack naturally.
+    margin_v2 = margin_v  # same base; ASS stacks multiple events at same position
+
+    lines = []
+    lines.append('[Script Info]')
+    lines.append('ScriptType: v4.00+')
+    lines.append('Collisions: Normal')
+    lines.append(f'PlayResX: {vid_w}')
+    lines.append(f'PlayResY: {vid_h}')
+    lines.append('ScaledBorderAndShadow: yes')
+    lines.append('')
+    lines.append('[V4+ Styles]')
+    lines.append('Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding')
+
+    def style_line(name, font, size, primary, outline_c, back_c, bold, border_st, outline, shadow, align, mv):
+        return (f'Style: {name},{font},{size},{primary},&H000000FF,'
+                f'{outline_c},{back_c},{bold},0,0,0,100,100,0,0,'
+                f'{border_st},{outline},{shadow},{align},10,10,{mv},1')
+
+    lines.append(style_line('L1', font1, size1, primary1, outline_color1, back_color1,
+                             bold1, border_style1, outline1, shadow1, alignment, margin_v))
+    if has_line2:
+        # Line2 sits just above or below line1 depending on position
+        # We offset MarginV so lines don't overlap
+        mv2 = margin_v + size1 + 8 if position == 'bottom' else margin_v + size1 + 8
+        lines.append(style_line('L2', font2, size2, primary2, outline_color2, back_color2,
+                                 bold2, border_style2, outline2, shadow2, alignment, mv2))
+
+    lines.append('')
+    lines.append('[Events]')
+    lines.append('Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text')
+
+    for cap in captions:
+        start = _ass_time(cap['start'])
+        end   = _ass_time(cap['end'])
+        text  = cap['text'].strip()
+        words = text.split()
+
+        if has_line2 and len(words) > 1:
+            mid   = math.ceil(len(words) / 2)
+            text1 = _apply_case(' '.join(words[:mid]), case1)
+            text2 = _apply_case(' '.join(words[mid:]), case2)
+            lines.append(f'Dialogue: 0,{start},{end},L1,,0,0,0,,{text1}')
+            lines.append(f'Dialogue: 1,{start},{end},L2,,0,0,0,,{text2}')
+        else:
+            text1 = _apply_case(text, case1)
+            lines.append(f'Dialogue: 0,{start},{end},L1,,0,0,0,,{text1}')
+
+    return '\n'.join(lines)
+
+
+def _build_ass_word_by_word(words_data, style, scale, position, custom, vid_w, vid_h):
+    """Build ASS file where each word pops in individually (CapCut style)."""
+    line1_cfg  = style.get('line1', {})
+    highlight  = style.get('highlight') or {}
+    has_highlight = bool(highlight and highlight.get('bg'))
+
+    font1  = _get_font_name(line1_cfg.get('font', 'Anton'), custom.get('font1'))
+    size1  = int((custom.get('size1') or line1_cfg.get('size', 60)) * scale)
+    color1 = custom.get('color1') or line1_cfg.get('color', '#FFFFFF')
+    bold1  = 1 if line1_cfg.get('bold', True) else 0
+    case1  = custom.get('case1') or line1_cfg.get('case', 'upper')
+
+    align_map   = {'bottom': 2, 'center': 5, 'top': 8}
+    marginV_map = {'bottom': 80, 'center': 0, 'top': 80}
+    alignment   = align_map.get(position, 2)
+    margin_v    = marginV_map.get(position, 80)
+
+    if has_highlight:
+        border_style = 3
+        outline = 0; shadow = 0
+        back_color   = _hex_to_ass(highlight['bg'])
+        primary      = _hex_to_ass(highlight.get('color', '#FFFFFF'))
+    else:
+        border_style = 1
+        outline = 3; shadow = 1
+        back_color = _hex_to_ass('#000000', alpha=0x80)
+        primary    = _hex_to_ass(color1)
+
+    outline_color = _hex_to_ass('#000000')
+
+    lines = []
+    lines.append('[Script Info]')
+    lines.append('ScriptType: v4.00+')
+    lines.append(f'PlayResX: {vid_w}')
+    lines.append(f'PlayResY: {vid_h}')
+    lines.append('ScaledBorderAndShadow: yes')
+    lines.append('')
+    lines.append('[V4+ Styles]')
+    lines.append('Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding')
+    lines.append(f'Style: W,{font1},{size1},{primary},&H000000FF,{outline_color},{back_color},'
+                 f'{bold1},0,0,0,100,100,0,0,{border_style},{outline},{shadow},{alignment},10,10,{margin_v},1')
+    lines.append('')
+    lines.append('[Events]')
+    lines.append('Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text')
+
+    for w in words_data:
+        start = _ass_time(w['start'])
+        end   = _ass_time(w['end'])
+        word  = _apply_case(w['word'], case1)
+        # ASS pop effect via \t transform: scale from 120% to 100%
+        text  = r'{\t(\fscx120\fscy120,\fscx100\fscy100)}' + word
+        lines.append(f'Dialogue: 0,{start},{end},W,,0,0,0,,{text}')
+
+    return '\n'.join(lines)
 
 
 if __name__ == '__main__':

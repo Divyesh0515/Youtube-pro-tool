@@ -18,6 +18,7 @@ const state = {
   captionBgColor: '#000000',
   captionBgOpacity: 0.55,
   captionBgPadding: 12,
+  wordByWord: false,  // CapCut style: each word pops individually
 };
 
 /* ── FONT MAP (canvas) ── */
@@ -299,9 +300,27 @@ function drawCaptions() {
   const ctx = canvas.getContext('2d');
   const W   = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
-  if (!state.captions.length) return;
 
-  const t   = state.currentTime;
+  const t     = state.currentTime;
+  const style = STYLES[state.selectedStyle] || STYLES['mehfil'];
+
+  // ── Word-by-word mode ──
+  if (state.wordByWord && state.words.length) {
+    const activeWord = state.words.find(w => t >= w.start && t <= w.end);
+    if (!activeWord) return;
+
+    const wid = activeWord.start; // use start time as unique ID
+    if (wid !== animState.capId) {
+      animState.capId   = wid;
+      animState.startMs = performance.now();
+    }
+    const elapsed = performance.now() - animState.startMs;
+    drawStyle(ctx, W, H, activeWord.word, style, elapsed, null);
+    return;
+  }
+
+  // ── Normal segment mode ──
+  if (!state.captions.length) return;
   const cap = state.captions.find(c => t >= c.start && t <= c.end);
   if (!cap) return;
 
@@ -310,8 +329,7 @@ function drawCaptions() {
     animState.startMs = performance.now();
   }
 
-  const elapsed = performance.now() - animState.startMs;
-  const style   = STYLES[state.selectedStyle] || STYLES['mehfil'];
+  const elapsed    = performance.now() - animState.startMs;
   const activeWord = state.wordHighlight && state.words.length
     ? (state.words.find(w => t >= w.start && t <= w.end) || null)
     : null;
@@ -759,6 +777,7 @@ function setAnimDur(val) { state.animDur=parseInt(val); document.getElementById(
 function toggleWordHighlight(el) { state.wordHighlight=el.checked; drawCaptions(); }
 function setHighlightColor(val) { state.highlightColor=val; document.getElementById('hl-color-hex').textContent=val; drawCaptions(); }
 function setGlowStrength(val) { state.glowStrength=parseInt(val); document.getElementById('glow-val').textContent=val==0?'Off':val; drawCaptions(); }
+function toggleWordByWord(el) { state.wordByWord=el.checked; drawCaptions(); }
 function toggleCaptionBg(el) { state.captionBg=el.checked; drawCaptions(); }
 function setCaptionBgColor(val) { state.captionBgColor=val; document.getElementById('bg-color-hex').textContent=val; drawCaptions(); }
 function setCaptionBgOpacity(val) { state.captionBgOpacity=val/100; document.getElementById('bg-opacity-val').textContent=val+'%'; drawCaptions(); }
@@ -799,6 +818,8 @@ async function exportVideo() {
       body:JSON.stringify({
         path:state.videoPath,
         captions:state.captions.map(({start,end,text})=>({start,end,text})),
+        words:state.words,
+        word_by_word:state.wordByWord,
         style:state.selectedStyle,
         font_size_scale:state.sizeScale,
         position:state.position,
